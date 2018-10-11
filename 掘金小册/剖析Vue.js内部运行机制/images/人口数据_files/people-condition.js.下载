@@ -1,0 +1,286 @@
+//人口迁徙查询条件初始化
+var people = {}; //初始化查询条件对象
+(function (exports) {
+	function load() {
+		//研究对象
+		//职住迁徙-研究类型
+		var container3 = $('#studyType');
+		exports.conditionConfig3 = [{
+			id: 'studyTypeSelect',
+			column: 'people3',
+			param_name: 'studyType',
+			text: '研究类型',
+			type: 'select_enum',
+			selected: 'home',
+			callback: studyTypeSelect,
+			attr: 'id',
+			data: [{
+				text: '居住地',
+				value: 'home'
+			}, {
+				text: '工作地',
+				value: 'work'
+			}]
+		}];
+		container3.dataLayer({
+			conditions: exports.conditionConfig3,
+			isHasFold: false,
+			isHasClear: false,
+			callback: {
+				cancel: function () {},
+
+				init: function () {
+					var nice_scroll_classobj = {
+						styler: "fb",
+						cursorcolor: "#bdbec7",
+						cursorwidth: '8',
+						cursorborderradius: '10px',
+						background: '#fff',
+						spacebarenabled: false,
+						autohidemode: 'leave',
+						cursorborder: '0',
+						zindex: '1000'
+					}
+					$(".nice-scroll").niceScroll(nice_scroll_classobj);
+
+
+				}
+			}
+		});
+
+		function studyTypeSelect(column, value) {
+			$("#wIndexSelect_select_text #home").removeClass("forbid");
+			$("#wIndexSelect_select_text #work").removeClass("forbid");
+			var container4 = $('#wIndex');
+			var item = people.condition2.conditionConfig4[0];
+			if (value == "work") {
+				item.selected = "home";
+				$("#wIndexSelect_select_text #work").addClass("forbid")
+
+			} else {
+				item.selected = "work";
+				$("#wIndexSelect_select_text #home").addClass("forbid")
+
+			}
+			container4.setData(item)
+			if (value == "home") {
+				$("#wIndexSelect_select_text #home").addClass("forbid");
+				//$("#selectType").text("居住地点")
+			} else {
+				$("#wIndexSelect_select_text #work").addClass("forbid");
+				//$("#selectType").text("工作地点")
+			}
+		}
+		//职住迁徙-指标选择
+		var container4 = $('#wIndex');
+		exports.conditionConfig4 = [{
+			id: 'wIndexSelect',
+			column: 'people4',
+			param_name: 'wIndex',
+			text: '',
+			type: 'select_enum',
+			selected: 'work',
+			callback: wIndexSelect,
+			attr: 'id',
+			data: [{
+				text: '居住地分布',
+				value: 'home'
+			}, {
+				text: '工作地分布',
+				value: 'work'
+			}]
+		}];
+
+		function wIndexSelect(column, value) {}
+
+		container4.dataLayer({
+			conditions: exports.conditionConfig4,
+			isHasFold: false,
+			isHasClear: false,
+			callback: {
+				cancel: function () {},
+
+				init: function () {
+					var nice_scroll_classobj = {
+						styler: "fb",
+						cursorcolor: "#bdbec7",
+						cursorwidth: '8',
+						cursorborderradius: '10px',
+						background: '#fff',
+						spacebarenabled: false,
+						autohidemode: 'leave',
+						cursorborder: '0',
+						zindex: '1000'
+					}
+					$(".nice-scroll").niceScroll(nice_scroll_classobj);
+
+
+				}
+
+			}
+		});
+	}
+	exports.load = load;
+})(this.people.condition2 = {});
+/**
+ * 初始化人口规模数据选择、指标选择条件
+ */
+(function (exports) {
+	function load() {
+		//人口规模-数据选择
+		var container1 = $('#peopleIndex');
+		exports.conditionConfig1 = [{
+			id: 'peopleIndexSelect',
+			column: 'people1',
+			param_name: 'peopleIndex',
+			text: '',
+			type: 'select_enum',
+			selected: 1,
+			callback: peopleIndexSelect,
+			attr: 'id',
+			data: [{
+				text: '居住人群',
+				value: 1
+			}, {
+				text: '工作人群',
+				value: 2
+			}]
+		}];
+		//选择后回调函数（可自定义）
+		function peopleIndexSelect(column, value) { //点击数据选择，执行的函数
+			//setBorder(value)
+
+		}
+		container1.dataLayer({
+			conditions: exports.conditionConfig1,
+			isHasFold: false,
+			isHasClear: false,
+			callback: {
+				cancel: function () {},
+
+				init: function () {
+					var nice_scroll_classobj = {
+						styler: "fb",
+						cursorcolor: "#bdbec7",
+						cursorwidth: '8',
+						cursorborderradius: '10px',
+						background: '#fff',
+						spacebarenabled: false,
+						autohidemode: 'leave',
+						cursorborder: '0',
+						zindex: '1000'
+					}
+					$(".nice-scroll").niceScroll(nice_scroll_classobj);
+					var parameter = {};
+					parameter = $.extend(true, {}, container1.getParameter());
+				}
+			}
+		});
+
+		//人口规模-指标选择
+		var container2 = $('#dataIndex');
+		exports.conditionConfig2 = [{
+			id: 'dataIndexSelect',
+			column: 'people2',
+			param_name: 'dataIndex',
+			text: '',
+			type: 'select_enum',
+			selected: '0',
+			callback: dataIndexSelect,
+			attr: 'id',
+			data: [{
+				text: '人口密度',
+				value: '0'
+			}, {
+				text: '人口数量',
+				value: '1'
+			}, {
+				text: '职住比',
+				value: '2'
+			}]
+		}];
+		container2.dataLayer({
+			conditions: exports.conditionConfig2,
+			isHasFold: false,
+			isHasClear: false,
+
+			callback: {
+				cancel: function () {},
+
+				init: function () {
+					var nice_scroll_classobj = {
+						styler: "fb",
+						cursorcolor: "#bdbec7",
+						cursorwidth: '8',
+						cursorborderradius: '10px',
+						background: '#fff',
+						spacebarenabled: false,
+						autohidemode: 'leave',
+						cursorborder: '0',
+						zindex: '1000'
+					}
+					$(".nice-scroll").niceScroll(nice_scroll_classobj);
+					var parameter = {};
+					parameter = $.extend(true, {}, container2.getParameter());
+					dataIndex = parameter.dataIndex ? parameter.dataIndex : '0';
+				}
+			}
+		});
+
+		function dataIndexSelect(column, value) { //点击指标，执行的函数
+			if (isChange) {
+				//点击应用取消弹窗
+				removeTip();
+				//人口规模-数据选择
+				var parameter = {};
+				parameter = $.extend(true, {}, $('#peopleIndex').getParameter());
+				var selectIndex_1 = $("#populationSize").GetCityMapControl("mapVisualization").getLayer("polygonEffect");
+
+				var sekstr;
+
+				if (parameter.peopleIndex == 1) {
+					switch (value) {
+						case 0:
+							sekstr = "liveDensity";
+							break
+						case 1:
+							sekstr = "livePeopleCount";
+							break
+						case 2:
+							sekstr = "employmentRatio";
+							break
+					}
+				}
+				if (parameter.peopleIndex == 2) {
+					switch (value) {
+						case 0:
+							sekstr = "workDensity";
+							break
+						case 1:
+							sekstr = "workPeopleCount";
+							break
+						case 2:
+							sekstr = "employmentRatio";
+							break
+					}
+				}
+				if (mapData && !$('.grid-box .btn-switch').hasClass('is-checked')) {
+					selectIndex_1.set(mapData.dataList, sekstr);
+				};
+				//切网格-指标纯小写
+				if ($("#netSize").GetCityMapControl("mapVisualization") && $('.grid-box .btn-switch').hasClass('is-checked')) {
+					var netIndex = sekstr.toLowerCase();
+					var selectIndex_net = $("#netSize").GetCityMapControl("mapVisualization").getLayer("netEffect");
+					$('#netEffect').find('div[data-box=sectionIndex]').find('.citymapControl-select-title').click();
+					$('#netEffect').find('div[data-box=sectionIndex]').find('.citymapControl-select-title').click();
+					selectIndex_net.setGrid({
+						fieldName: netIndex
+					})
+				}
+
+			}
+		}
+
+	}
+	exports.load = load;
+})(this.people.condition = {});

@@ -1,0 +1,417 @@
+﻿        var fns = {
+            where: function (d, v, c, isNotIn, sign) {
+                return $.grep(d,
+                    function (_d) {
+                        var _dvalue = '';
+                        if (c == undefined || c == '' || c == null)
+                            _dvalue = _d
+                        else
+                            _dvalue = _d[c];
+
+                        sign = sign || '==';
+
+                        if (sign == '>') return _dvalue > v;
+                        else if (sign == '>=') return _dvalue >= v;
+                        else if (sign == '<') return _dvalue < v;
+                        else if (sign == '<=') return _dvalue <= v;
+                        else if (sign == '!=') return _dvalue != v;
+                        else if (sign.toLowerCase() == 'indexof') return _dvalue.indexOf(v) > -1;
+                        else return _dvalue == v;
+                    }, isNotIn);
+            }
+        };
+        //验证元素是否在数组中存在
+        //paramter: object{value:'要比较的值',column:'列名(不是对象可以不传)'}
+        //return: true or false
+        Array.prototype.contains = function (object) {
+            return fns.where(this, object.value, object.column).length > 0;
+        }
+        //数组过滤
+        //paramter:obj{value:'要比较的值',column:'列名(不是对象可以不传)'}
+        //返回数组
+        Array.prototype.where = function (obj) {
+            var isNotIn = obj.isNotIn == undefined ? false : obj.isNotIn;
+            var sign = typeof obj.sign == 'undefined' ? '==' : obj.sign;
+            return fns.where(this, obj.value, obj.column, isNotIn, sign);
+        }
+        Array.prototype.whereFirst = function (obj) {
+            var sign = '==',
+                isNotIn = false,
+                column = '',
+                value = '';
+            if (typeof arguments[0] == 'object') {
+                if (arguments[0].sign) sign = arguments[0].sign;
+                if (arguments[0].isNotIn) isNotIn = arguments[0].isNotIn;
+                if (arguments[0].value) value = arguments[0].value;
+                if (arguments[0].column) column = arguments[0].column;
+            }
+            else if (typeof arguments[0] == 'string')
+            {
+                column = arguments[0];
+                value = arguments[1];
+                if (arguments[2]) sign = arguments[2];
+            }
+            var arr = fns.where(this, value, column, isNotIn, sign);
+
+            return arr.length > 0 ? arr[0] : {};
+        }
+        //数组过滤
+        //paramter:obj{value:'要比较的值',column:'列名(不是对象可以不传)'}
+        //返回数组
+        Array.prototype.remove = function (obj) {
+            return fns.where(this, obj.value, obj.column, true);
+        }
+        
+        //对象数组排序 排序字段值为parsefloat
+        //column:列名 ordertype:排序类型 desc or asc
+        //返回数组
+        Array.prototype.order = function (column, ordertype) {
+            var n1 = ordertype == 'desc' ? -1 : 1, n2 = n1 == 1 ? -1 : 1;
+            return this.sort(function (a, b) {
+                var _a = -9999999, _b = -9999999;
+                if (parseFloat(a[column]) == a[column]) _a = parseFloat(a[column]);
+                if (parseFloat(b[column]) == b[column]) _b = parseFloat(b[column]);
+                if (isNaN(parseFloat(a[column])) && !isNaN(parseFloat(b[column]))) return n1 == -1 ? 1 : -1;
+                if (!isNaN(parseFloat(a[column])) && isNaN(parseFloat(b[column]))) return n1 == -1 ? -1 : 1;
+                return parseFloat(a[column]) > parseFloat(b[column]) ? n1 : n2;
+            });
+        }
+
+        //数组去重复
+        //paramter:obj{value:'要比较的值',column:'列名(不是对象可以不传)'}
+        //返回数组
+        Array.prototype.unique = function (column) {
+            var result = [], hash = {};
+            for (var i = 0; i < this.length; i++) {
+                var elem = this[i];
+                if (typeof column != 'undefined' && column != '')
+                    elem = this[i][column];
+                if (!hash[elem]) {
+                    result.push(this[i]);
+                    hash[elem] = true;
+                }
+            }
+            return result;
+        }
+        //获取元素到数组中的位置
+        //paramter:obj{value:'要比较的值',column:'列名(不是对象可以不传)'}
+        Array.prototype.mIndexOf = function (obj) {
+            for (var i = 0; i < this.length; i++) {
+                var value = this[i];
+                if (typeof obj.column != 'undefined') value = this[i][obj.column];
+                if (value == obj.value) return i;
+            }
+            return -1;
+        }
+
+        function _string() {
+            if (typeof _string._initialized == 'undefined') {
+                //替换字符串
+                _string.prototype.format = function (s, args) {
+                    var result = s;
+                    for (var i = 1; i < arguments.length; i++) {
+                        if (arguments[i] != undefined) {
+                            var reg = new RegExp("({)" + (i - 1) + "(})", "g");
+                            result = result.replace(reg, arguments[i]);
+                        }
+                    }
+                    return result;
+                };
+                _string.prototype.removeHTML = function (str) {
+                    str = str.replace(/<\/?[^>]*>/g, ''); //去除HTML tag
+                    str = str.replace(/[ | ]*\n/g, '\n'); //去除行尾空白
+                    str = str.replace(/&nbsp;/ig, ''); //去掉&nbsp;
+                    return str;
+                };
+                _string.prototype.subString = function (s, len, suffix) {
+                    if (s.length > len) s = s.substr(0, len) + (suffix == undefined ? '' : suffix);
+                    if (s == '') s = '--'; 
+                    return s;
+                };//保留小数，无小数返回当前值
+                _string.prototype.toFixed = function (s, len, isSplit) {
+                    var v = s;
+                    if (v == null) return '--';
+                    else if (v.toString() == '' || v.toString() == '-65535.01' || v.toString() == '--') return '--';
+                    else if (isSplit == false) v = parseFloat(s).toFixed(len)
+                    else if (s.toString().indexOf('.') > 0) v = parseFloat(s).toFixed(len);
+                    return v;
+                }
+                _string.prototype.toMillionFixed = function (s, len, is) {
+                    var v = s;
+                    if (v == null || v == '' || v == '-65535.01') return '--';
+                    if (parseFloat(s) == s) {
+                        if (is) return string.toFixed((parseFloat(s) / 10000), len);
+                        else return (parseFloat(s) / 10000).toFixed(len);
+                    }
+                    return '--';
+                },
+                _string._initialized = true;
+            }
+        }
+        var string = new _string();
+        //调用string.format('实例{0}','要替换的值')
+
+        /*去空格*/
+        String.prototype.trim = function () {
+            return this.replace(/(^\s*)|(\s*$)/g, '');
+        }
+
+        //2012-01-01 字符串转换日期
+        String.prototype.toDate = function () {
+            var str = this.split('-');
+            if (str.length == 3) {
+                var date = new Date();
+                date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+                date.setUTCHours(0, 0, 0, 0);
+                return date;
+            }
+        }
+        //日期格式化
+        Date.prototype.format = function (fmt) {
+            var o = {
+                "M+": this.getMonth() + 1,                 //月份   
+                "d+": this.getDate(),                    //日   
+                "h+": this.getHours(),                   //小时   
+                "m+": this.getMinutes(),                 //分   
+                "s+": this.getSeconds(),                 //秒   
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度   
+                "S": this.getMilliseconds()             //毫秒   
+            };
+            if (/(y+)/.test(fmt))
+                fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt))
+                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+       
+        //html赋值
+        function replaceHtml(el, html) {
+            if (navigator.userAgent.toLowerCase().indexOf('msie') < 0) {
+                $('#' + el).html(html);
+            } else {
+                var oldEl = document.getElementById(el);
+                var newEl = oldEl.cloneNode(false);
+                newEl.innerHTML = html;
+                oldEl.parentNode.replaceChild(newEl, oldEl);
+            }
+        }
+
+        function asyncInnerHTML(HTML, callback) {
+            var temp = document.createElement('div'),
+            frag = document.createDocumentFragment();
+            temp.innerHTML = HTML;
+            (function () {
+                if (temp.firstChild) {
+                    frag.appendChild(temp.firstChild);
+                    setTimeout(arguments.callee, 0);
+                } else {
+                    callback(frag);
+                }
+            })();
+        }
+        //反转义字符
+        function escape2Html(str) {
+            var arrEntities = { 'lt': '<', 'gt': '>', 'nbsp': ' ', 'amp': '&', 'quot': '"' };
+            return str.replace(/&(lt|gt|nbsp|amp|quot);/ig, function (all, t) { return arrEntities[t]; });
+        };//转义字符
+        function html2Escape(sHtml) {
+            return sHtml.replace(/[<>&"]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; });
+        }
+
+
+        //判断元素是否在某个容器之内
+        function whetherChild(srcElement, obj)
+        {
+            if (srcElement == obj[0]) return true;
+            else {
+                var childs = obj.children();
+                for (var i = 0; i < childs.length; i++) {
+                    if (srcElement == childs[i]) return true;
+                    else {
+                        if (arguments.callee(srcElement, $(childs[i]))) return true;
+                    }
+                }
+            }
+            return false;
+        }
+        /*信息提示  后期可以做成统一的，以后替代提示框；自动消失
+        s 设置几秒消失
+        callback 回调方法，当提示框消失之后调用    */
+        function messagePrompt(text, s, callback) {
+            (function () {
+                if (document.getElementById('basecity_message') == null) {
+                    var errortext = '<div id="basecity_message" class="buytc" style="display:none;">';
+                    errortext += '<div style="width:410px; height:35px;" class="buytc_box">';
+                    errortext += '<div style="text-align:center;" class="buytc_tit logb01" id="basecity_message_text">' + text + '</div>';
+                    errortext += '</div>';
+                    errortext += '<div class="buytc_bg" style="height:45px; width:420px;"></div>';
+                    errortext += '</div>';
+                    $('body').append(errortext);
+                }
+                else
+                    $('#basecity_message_text').html(text);
+
+                var _lheight = document.documentElement.clientHeight;
+                var _lwidth = document.documentElement.clientWidth;
+                var objheight = $('#basecity_message').height();
+                var objwidth = $('#basecity_message').width();
+                var _top = (_lheight - objheight) / 3;
+                var _left = _lwidth / 2 - (objwidth * 0.7);
+                $('#basecity_message').css({ left: _left + 'px', top: _top + 'px' });
+            })();
+            s = s == undefined ? 1000 : s * 1000;
+            $('#basecity_message').fadeIn('normal');
+            var basecity_messageSetInterval = setInterval(function () {
+                $('#basecity_message').fadeOut('slow');
+                if (callback != undefined)
+                    callback();
+                window.clearInterval(basecity_messageSetInterval);
+            }, s)
+        }
+
+        //类似网页弹窗
+        function pageAlert(text, title, dialog_confirm, dialog_cancel) {
+            if (typeof pageAlert._initialized == 'undefined') {
+                var cssPath = 'http://js.soufunimg.com/industry/commoncss/industry_dialog.css?v=1.1';
+                if (document.URL.toLocaleLowerCase().indexOf('https://')>-1) cssPath = 'https://static.soufunimg.com/industry/commoncss/industry_dialog.css?v=1.1';
+
+                $('head').append('<link rel="stylesheet" type="text/css" href="' + cssPath + '" />');
+                //添加html
+                (function () {
+                    var _dialogHtml = '<div id="mm_mask" style="background: none repeat scroll 0 0 #fff; height: 100%; left: 0; opacity: 0.5; position: fixed; top: 0; width: 100%; z-index: 999998;display:none;filter:alpha(opacity=50);" tabindex="0"></div>'
+                    + '<div style="z-index: 999999; position: fixed; display:none;" class="mm_dialog" >'
+                    + '<div class="dialog_head" style="cursor:move;" id="dialog_header">'
+                    + '<span id="dialog_head_title">&nbsp;</span>'
+                    + '<a href="javascript:;" class="ico_close_d" title="关闭">×</a>'
+                    + '</div>'
+                    + '<div id="dialog__content_">'
+                    + '<div class="dialog_inner">'
+                    + '<div id="dialog__body_" class="dialog_content">'
+                    + '<div style="" class="">'
+                    + '<div class="cnfx_content">'
+                    + '<span class="dialog_icon icon_info_b"></span>'
+                    + '<div class="dialog_f_c">'
+                    + '<div id="dialog_content_text">您确定继续吗？</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div style="display:none;" class="cnfx_status">'
+                    + '<input type="checkbox" class="cnfx_status_checkbox" id="dialog_recordstatus" />'
+                    + '<label for="dialog_recordstatus"></label>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '<div id="dialog__foot_" class="dialog_operate">'
+                    + '<div class=" txt_right cnfx_btn">'
+                    + '<a href="javascript:;" id="dialog_confirm" class="btn_gray confirm wd2 ">确定</a>'
+                    + '<a href="javascript:;" style="display:;" id="dialog_cancel" class="btn_gray cancel wd2 ">取消</a>'
+                    + '</div>'
+                    + '<div class="clr"></div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>';
+                    $('body').append(_dialogHtml);
+                })();
+
+                function mousePosition(ev) {
+                    ev = ev || window.event
+                    if (ev.pageX || ev.pageY) {
+
+                        return { x: ev.pageX, y: ev.pageY };
+                    }
+                    return {
+                        x: ev.clientX + document.body.scrollLeft - document.body.clientLeft,
+                        y: ev.clientY + document.body.scrollTop - document.body.clientTop
+                    };
+                }
+
+                $('#dialog_header').unbind('mousedown').mousedown(function (event) {
+                    var xy = mousePosition(event);
+                    //鼠标离DIV最左边距离
+                    var _pl = xy.x - $(this).offset().left;
+                    //鼠标离DIV最右边的距离
+                    var _pt = xy.y - $(this).offset().top;
+
+                    //浏览器宽度
+                    var _bw = document.documentElement.clientWidth - 2;
+                    //浏览器高度
+                    var _bh = document.documentElement.clientHeight - 2;
+                    
+                    $(document).unbind('mousemove').mousemove(function (event) {
+                        var evxy = mousePosition(event);
+                        //x坐标
+                        var _x = evxy.x - $(window).scrollLeft() - _pl; _x = _x < 0 ? 0 : _x;
+                        var _y = evxy.y - $(window).scrollTop() - _pt; _y = _y < 0 ? 0 : _y;
+
+                        _x = _x + $('.mm_dialog').width() > _bw ? _bw - $('.mm_dialog').width() : _x;
+                        _y = _y + $('.mm_dialog').height() > _bh ? _bh - $('.mm_dialog').height() : _y;
+
+                        $('.mm_dialog').css({ left: _x + 'px', top: _y + 'px' });
+                    });
+                });
+
+                $(document).unbind('mouseup').mouseup(function () {
+                    $(document).unbind('mousemove');
+                });
+
+                function whetherChild(srcElement, obj) {
+                    if (srcElement == obj[0]) return true;
+                    else {
+                        var childs = obj.children();
+                        for (var i = 0; i < childs.length; i++) {
+                            if (srcElement == childs[i]) return true;
+                            else {
+                                if (arguments.callee(srcElement, $(childs[i]))) return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+
+                $(document).click(function (e) {
+                    e = window.event || e;
+                    var srcElement = e.srcElement || e.target;
+                    if (!whetherChild(srcElement, $('.mm_dialog'))) {
+                        var dialog_i = 1;
+
+                        var dialogSett = setInterval(function () {
+                            if (dialog_i % 2 == 0) $('#dialog_header').css('background-color', '#eef0f1');
+                            else $('#dialog_header').css('background-color', '#F7FAFC');
+                            if (dialog_i == 6) window.clearInterval(dialogSett);
+                            dialog_i++;
+                        }, 80);
+                    }
+                });
+
+                pageAlert._initialized = true;
+            }
+            $('#mm_mask,.mm_dialog').show();
+            $('#dialog_head_title').text(title || '来至网页提示');
+            $('#dialog_content_text').html(text);
+
+            if (typeof dialog_cancel == 'undefined') $('#dialog_cancel').hide();
+            else $('#dialog_cancel').show();
+
+            //每次设置居中显示
+            var _dialog_x = (document.documentElement.clientWidth - 400) / 2;
+
+            var _dialog_y = (document.documentElement.clientHeight - 150 * 1.5) / 2;
+            $('.mm_dialog').css({ left: _dialog_x + 'px', top: _dialog_y + 'px' });
+
+            //event
+            (function () {
+                //确定
+                $('#dialog_confirm').unbind('click').click(function () {
+                    $('.mm_dialog,#mm_mask').hide();
+                    if (typeof dialog_confirm == 'function') dialog_confirm();
+                });
+
+                //取消
+                $('#dialog_header .ico_close_d,#dialog_cancel').unbind('click').click(function () {
+                    $('.mm_dialog,#mm_mask').hide();
+                    if (typeof dialog_cancel == 'function') dialog_cancel();
+                })
+            })();
+        }
+        

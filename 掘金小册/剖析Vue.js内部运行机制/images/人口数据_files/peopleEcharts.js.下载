@@ -1,0 +1,883 @@
+var xScaleAge = [];
+var xScaleGender = [];
+var xScaleFamily = [];
+var xScaleOcc = [];
+var peopleStru = {
+	"legend": ['居住', '工作'],
+	"name": '万人'
+};
+var peopleStru2 = {
+	"legend": ['居住'],
+	"name": '户'
+};
+var peopleStruAgeLive = [];
+var peopleStruAgeWork = [];
+var peopleStruFamily = [];
+var peopleStruGenderLive = [];
+var peopleStruGenderWork = [];
+var peopleStruOccLive = [];
+var peopleStruOccWork = [];
+var defaultValue = {
+	stru: {
+		text: "年龄",
+		value: "1"
+	},
+	pre: {
+		text: "金融",
+		value: "1"
+	},
+	value: {
+		text: "家庭年收入",
+		value: "1"
+	}
+}
+$(function () {
+	//人口结构
+	//getPeopleStruEchartsData();
+	//人口偏好
+	//getpopulationPrefEchartsData();
+	//人口价值
+	//getPopulationValueEchartsData();
+
+})
+
+//人口结构图
+
+function getPeopleStruEchartsData(obj) {
+	var live = false;
+	var work = false;
+	if (obj.crowd == '1') {
+		live = true;
+	} else if (obj.crowd == '2') {
+		work = true;
+	}
+	var data = JSON.stringify(obj);
+	$("#peopleStructureBody").overlay();
+	$("#peopleStructure").hide();
+	changeSelect_getPeopleStru(live, work);
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/index/getPopulationStructureInfo',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (reData) {
+			var jsonData = reData.data;
+			if (jsonData) {
+				peopleStruAgeLive = toFixedTwo(jsonData.populationStructureAgeDto.liveY);
+				peopleStruAgeWork = toFixedTwo(jsonData.populationStructureAgeDto.workY);
+				xScaleAge = jsonData.populationStructureAgeDto.liveX;
+				peopleStruFamily = jsonData.populationStructureFamilyDto.liveY;
+				xScaleFamily = jsonData.populationStructureFamilyDto.liveX;
+				peopleStruGenderLive = toFixedTwo(jsonData.populationStructureGenderDto.liveY);
+				peopleStruGenderWork = toFixedTwo(jsonData.populationStructureGenderDto.workY);
+				xScaleGender = jsonData.populationStructureGenderDto.liveX;
+				peopleStruOccLive = toFixedTwo(jsonData.populationStructureOccupationDto.liveY);
+				peopleStruOccWork = toFixedTwo(jsonData.populationStructureOccupationDto.workY);
+				xScaleOcc = jsonData.populationStructureOccupationDto.liveX;
+				renderPeopleStruPie(defaultValue.stru.value, live, work)
+				//peopleStruEcharts(peopleStru, xScaleAge, peopleStruAgeLive, peopleStruAgeWork, live, work);
+				$("#peopleStructureBody").unOverlay();
+				$("#peopleStructure").show();
+			} else {
+				$("#peopleStructureBody").unOverlay();
+				$('#peopleStructure').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+				$("#peopleStructure").show();
+			}
+		},
+		error: function (errorResult) {
+			$("#peopleStructureBody").unOverlay();
+			$('#peopleStructure').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+			$("#peopleStructure").show();
+		}
+	})
+}
+
+function peopleStruEcharts(peopleStru, xData, liveData, workData, live, work) {
+	var legendArr = peopleStru.legend;
+	var cname = peopleStru.name;
+	var objss = echarts.getInstanceByDom(document.getElementById('peopleStructure'));
+	if (objss) objss.dispose();
+	var myChart = echarts.init(document.getElementById('peopleStructure'));
+
+	option = {
+		//主题
+		title: {
+			text: '',
+			subtext: ''
+		},
+		tooltip: {
+			trigger: 'axis',
+			formatter: function (params, ticket, callback) {
+				//console.log(params);
+				var relVal = params[0].name + '<br />' + params[0].seriesName + ":" + params[0].value + "万人" + '<br />';
+				if (params[1]) {
+					relVal += params[1].seriesName + ":" + params[1].value + "万人";
+				}
+				return relVal;
+			}
+		},
+		grid: {
+			left: '15%',
+			right: '10%',
+			bottom: '15%'
+		},
+		//设置图例
+		/*	legend: {
+				data:legendArr,
+				selected : {}
+			},*/
+
+		calculable: true,
+		xAxis: [{
+			type: 'category', //x轴的类型，时间轴可以设置为time
+			boundaryGap: true, //两侧是否留白，按需求基本都为false
+			data: xData,
+			axisTick: {
+				show: false
+			},
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+
+		}],
+		yAxis: [{
+			type: 'value',
+			name: cname,
+			splitLine: {
+				show: false
+			},
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+
+		}],
+		color: webColor.config.pieColors
+
+	};
+	if (workData.length > 0) {
+		if (live) {
+			option.legend = {
+				data: legendArr,
+				selected: {
+					"工作": false,
+				}
+			};
+		} else if (work) {
+			option.legend = {
+				data: legendArr,
+				selected: {
+					"居住": false,
+				}
+			};
+		}
+		option.series = [{
+				name: legendArr[0],
+				type: 'bar',
+				data: liveData,
+				barWidth: 6
+			},
+			{
+				name: legendArr[1],
+				type: 'bar',
+				data: workData,
+				barWidth: 6
+			}
+		]
+	} else {
+		/*option.legend = {
+				data:legendArr,
+		};*/
+		option.series = [{
+			name: legendArr[0],
+			type: 'bar',
+			data: liveData,
+			barWidth: 6
+		}]
+	}
+	myChart.setOption(option, true);
+}
+
+function changeSelect_getPeopleStru(live, work) {
+	$('#peopleStructure_Select').CityMapControl('select', {
+		data: [{
+				text: "年龄",
+				value: '1'
+			},
+			{
+				text: "性别",
+				value: '2'
+			},
+			{
+				text: "职业",
+				value: '3'
+			},
+			{
+				text: "家庭",
+				value: '4'
+			}
+		],
+		defautSelectText: defaultValue.stru.text,
+		seleted: defaultValue.stru.value,
+		eventListener: {
+			change: function (data) {
+				//console.log(data);
+				defaultValue.stru = data
+				renderPeopleStruPie(data.value, live, work)
+				// sType = data.value;
+				// if (sType === '1') {
+				// 	//年龄
+				// 	if (xScaleAge.length > 0) {
+				// 		peopleStruEcharts(peopleStru, xScaleAge, peopleStruAgeLive, peopleStruAgeWork, live, work);
+				// 	}
+				// } else if (sType === '2') {
+				// 	//性别
+				// 	peopleStruEcharts(peopleStru, xScaleGender, peopleStruGenderLive, peopleStruGenderWork, live, work);
+				// } else if (sType === '3') {
+				// 	//职业
+				// 	peopleStruEcharts(peopleStru, xScaleOcc, peopleStruOccLive, peopleStruOccWork, live, work);
+				// } else if (sType === '4') {
+				// 	//家庭
+				// 	peopleStruEcharts(peopleStru2, xScaleFamily, peopleStruFamily, [], live, work);
+				// }
+			}
+
+		}
+	});
+
+}
+
+function renderPeopleStruPie(sType, live, work) {
+	// var chooseFunction = {
+	// 	"1": peopleStruEcharts(peopleStru, xScaleAge, peopleStruAgeLive, peopleStruAgeWork, live, work),
+	// 	"2": peopleStruEcharts(peopleStru, xScaleGender, peopleStruGenderLive, peopleStruGenderWork, live, work),
+	// 	"3": peopleStruEcharts(peopleStru, xScaleOcc, peopleStruOccLive, peopleStruOccWork, live, work),
+	// 	"4": peopleStruEcharts(peopleStru2, xScaleFamily, peopleStruFamily, [], live, work)
+	// }
+	switch (sType) {
+		case '1':
+			peopleStruEcharts(peopleStru, xScaleAge, peopleStruAgeLive, peopleStruAgeWork, live, work);
+			break;
+		case '2':
+			peopleStruEcharts(peopleStru, xScaleGender, peopleStruGenderLive, peopleStruGenderWork, live, work);
+			break;
+		case '3':
+			peopleStruEcharts(peopleStru, xScaleOcc, peopleStruOccLive, peopleStruOccWork, live, work);
+			break;
+		case '4':
+			peopleStruEcharts(peopleStru2, xScaleFamily, peopleStruFamily, [], live, work)
+			break;
+	}
+}
+//人口偏好信息
+var populationPreferenceFinanceDto = []; //金融
+var populationPreferenceInterestDto = []; //兴趣
+var getpopulationPrefFinanceLegend = [];
+var getpopulationPrefInterestLegend = [];
+
+function getpopulationPrefEchartsData(obj) {
+	$("#populationPreferenceBody").overlay();
+	$("#populationPreference").hide();
+	var data = JSON.stringify(obj);
+	changeSelect_getpopulationPref();
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/index/getPopulationPreferenceInfo',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (reData) {
+			var jsonData = reData.data;
+			if (jsonData) {
+				populationPreferenceFinanceDto = jsonData.populationPreferenceFinanceDto;
+				populationPreferenceInterestDto = jsonData.populationPreferenceInterestDto;
+				getpopulationPrefFinanceLegend = [];
+				$.each(populationPreferenceFinanceDto, function (i, val) {
+					getpopulationPrefFinanceLegend.push(val.name);
+				})
+				getpopulationPrefInterestLegend = [];
+				$.each(populationPreferenceInterestDto, function (i, val) {
+					getpopulationPrefInterestLegend.push(val.name);
+				})
+				renderPrePie(defaultValue.pre.value)
+				//populationPrefEcharts(getpopulationPrefFinanceLegend, populationPreferenceFinanceDto);
+				$("#populationPreferenceBody").unOverlay();
+				$("#populationPreference").show();
+			} else {
+				$("#populationPreferenceBody").unOverlay();
+				$('#populationPreference').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+				$("#populationPreference").show();
+			}
+		},
+		error: function (errorResult) {
+			$("#populationPreferenceBody").unOverlay();
+			$('#populationPreference').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+			$("#populationPreference").show();
+		}
+	})
+}
+
+function populationPrefEcharts(legend, dto) {
+	var objss = echarts.getInstanceByDom(document.getElementById('populationPreference'));
+	if (objss) objss.dispose();
+	var myChart = echarts.init(document.getElementById('populationPreference'));
+
+	option = {
+		tooltip: {
+			trigger: 'item',
+			formatter: "{b}: {c}人({d}%)",
+			confine: true
+		},
+		legend: {
+			orient: 'vertical',
+			x: 'left',
+			data: legend
+		},
+		series: [{
+			name: '访问来源',
+			// 设置成相对的百分比
+			center: ['65%', '55%'],
+			type: 'pie',
+			radius: ['50%', '70%'],
+			avoidLabelOverlap: false,
+			label: {
+				normal: {
+					show: false,
+					position: 'center'
+				},
+				emphasis: {
+					show: false,
+					textStyle: {
+						fontSize: '30',
+						fontWeight: 'bold'
+					}
+				}
+			},
+			labelLine: {
+				normal: {
+					show: false
+				}
+			},
+			data: dto
+		}],
+		color: webColor.config.pieColors
+	};
+	myChart.setOption(option, true);
+}
+
+function changeSelect_getpopulationPref() {
+	$('#populationPreference_Select').CityMapControl('select', {
+		data: [{
+				text: "金融",
+				value: '1'
+			},
+			{
+				text: "兴趣",
+				value: '2'
+			}
+
+		],
+		defautSelectText: defaultValue.pre.text,
+		seleted: defaultValue.pre.value,
+		eventListener: {
+			change: function (data) {
+				//console.log(data);
+				defaultValue.pre = data
+				//sType = data.value;
+				renderPrePie(data.value)
+				// if (sType === '1') {
+				// 	//金融
+				// 	if (populationPreferenceFinanceDto.length > 0) {
+				// 		populationPrefEcharts(getpopulationPrefFinanceLegend, populationPreferenceFinanceDto);
+				// 	}
+				// } else if (sType === '2') {
+				// 	//兴趣
+				// 	populationPrefEcharts(getpopulationPrefInterestLegend, populationPreferenceInterestDto);
+				// }
+			}
+		}
+	});
+}
+
+function renderPrePie(sType) {
+	switch (sType) {
+		case '1':
+			if (populationPreferenceFinanceDto.length > 0) {
+				populationPrefEcharts(getpopulationPrefFinanceLegend, populationPreferenceFinanceDto);
+			}
+			break;
+		case '2':
+			if (populationPreferenceInterestDto.length > 0) {
+				populationPrefEcharts(getpopulationPrefInterestLegend, populationPreferenceInterestDto);
+			}
+			break;
+
+	}
+}
+//人口价值
+
+var xFamilyAnnualIncome = [];
+var yFamilyAnnualIncome = [];
+var xHaveCar = [];
+var yHaveCar = [];
+var xHaveHome = [];
+var yHaveHome = [];
+var yText = "万人";
+var yTextFamily = "%";
+var xAxisNameFamilyAnnualIncome = "年收入";
+var xAxisHaveCar = "有车概率";
+var xAxisHaveHome = "有房概率";
+
+function getPopulationValueEchartsData(obj) {
+	$("#PopulationValueBody").overlay();
+	$("#PopulationValue").hide();
+	var data = JSON.stringify(obj);
+	changeSelect_getPopulationValue();
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/index/getPopulationValueInfo',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (reData) {
+			var jsonData = reData.data;
+			if (jsonData) {
+				xFamilyAnnualIncome = jsonData.populationValueFamilyAnnualIncomeDto.liveX;
+				yFamilyAnnualIncome = jsonData.populationValueFamilyAnnualIncomeDto.liveY;
+				xHaveCar = jsonData.populationValueHaveCarDto.liveX;
+				yHaveCar = toFixedTwo(jsonData.populationValueHaveCarDto.liveY);
+				xHaveHome = jsonData.populationValueHaveHomeDto.liveX;
+				yHaveHome = toFixedTwo(jsonData.populationValueHaveHomeDto.liveY);
+				renderValue(defaultValue.value.value)
+				//PopulationValueEcharts(xFamilyAnnualIncome, yFamilyAnnualIncome, yTextFamily);
+				$("#PopulationValueBody").unOverlay();
+				$("#PopulationValue").show();
+			} else {
+				$("#PopulationValueBody").unOverlay();
+				$('#PopulationValue').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+				$("#PopulationValue").show();
+			}
+		},
+		error: function (errorResult) {
+			$("#PopulationValueBody").unOverlay();
+			$('#PopulationValue').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+			$("#PopulationValue").show();
+		}
+	})
+}
+
+function PopulationValueEcharts(xData, yData, str) {
+	var objss = echarts.getInstanceByDom(document.getElementById('PopulationValue'));
+	if (objss) objss.dispose();
+	var myChart = echarts.init(document.getElementById('PopulationValue'));
+	option = {
+		title: {
+
+		},
+		tooltip: {
+			trigger: 'axis',
+			confine: true,
+			/* axisPointer: {
+			     type: 'cross',
+			     label: {
+			         backgroundColor: '#6a7985'
+			     }
+			 },*/
+			formatter: function (params, ticket, callback) {
+				//console.log(params);
+				var relVal = params[0].name + ":" + params[0].value + str + '<br />';
+				return relVal;
+			}
+		},
+
+		grid: {
+			top: '17%',
+			left: '5%',
+			right: '13%',
+			bottom: '8%',
+			containLabel: true
+		},
+		xAxis: [{
+			type: 'category',
+			//name : str,
+			boundaryGap: false,
+			data: xData,
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+		}],
+		yAxis: [{
+			type: 'value',
+			name: str,
+			splitLine: {
+				show: false
+			},
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+
+		}],
+		series: [{
+			//name:'搜索引擎',
+			type: 'line',
+			label: {
+				normal: {
+					show: false,
+					position: 'top'
+				}
+			},
+			//areaStyle: {normal: {}},
+			itemStyle: {
+				normal: {
+					areaStyle: {
+						opacity: 0.4
+					},
+					color: webColor.config.areaColor[0]
+				}
+			},
+			data: yData
+		}]
+	};
+	myChart.setOption(option, true);
+}
+
+function changeSelect_getPopulationValue() {
+	$('#PopulationValue_Select').CityMapControl('select', {
+		data: [{
+				text: "家庭年收入",
+				value: '1'
+			},
+			{
+				text: "有车概率",
+				value: '2'
+			},
+			{
+				text: "有房概率",
+				value: '3'
+			}
+
+		],
+		defautSelectText: defaultValue.value.text,
+		seleted: defaultValue.value.value,
+		eventListener: {
+			change: function (data) {
+				//console.log(data);
+				defaultValue.value = data
+				//sType = data.value;
+				renderValue(data.value)
+				// if (sType === '1') {
+				// 	//家庭年收入
+				// 	if (xFamilyAnnualIncome.length > 0) {
+				// 		PopulationValueEcharts(xFamilyAnnualIncome, yFamilyAnnualIncome, yTextFamily);
+				// 	}
+				// } else if (sType === '2') {
+				// 	//有车概率
+				// 	PopulationValueEcharts(xHaveCar, yHaveCar, yText);
+				// } else if (sType === '3') {
+				// 	//有房概率
+				// 	PopulationValueEcharts(xHaveHome, yHaveHome, yText);
+				// }
+			}
+		}
+	});
+
+}
+
+function renderValue(sType) {
+	switch (sType) {
+		case '1':
+			PopulationValueEcharts(xFamilyAnnualIncome, yFamilyAnnualIncome, yTextFamily);
+			break;
+		case '2':
+			PopulationValueEcharts(xHaveCar, yHaveCar, yText);
+			break;
+		case '3':
+			PopulationValueEcharts(xHaveHome, yHaveHome, yText);
+			break;
+
+
+	}
+}
+var xCurrentTrafficFlow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+var workDayData = [];
+var restDayData = [];
+//时点人流
+function getPopulationCurrentTrafficFlowData(obj) {
+	var data = JSON.stringify(obj);
+	$("#currentTrafficFlowEchartsBody").overlay();
+	$("#currentTrafficFlowEcharts").hide();
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/index/getPopulationCurrentTrafficFlowInfo',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (reData) {
+			var jsonData = reData.data;
+			if (jsonData) {
+				workDayData = toFixedTwo(jsonData.populationCurrentTrafficFlowDayDto.peopleNumY);
+				restDayData = toFixedTwo(jsonData.populationCurrentNoTrafficFlowDayDto.peopleNumY);
+				currentTrafficFlowEcharts(xCurrentTrafficFlow, workDayData, restDayData);
+				$("#currentTrafficFlowEchartsBody").unOverlay();
+				$("#currentTrafficFlowEcharts").show();
+			} else {
+				$("#currentTrafficFlowEchartsBody").unOverlay();
+				$('#currentTrafficFlowEcharts').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+				$("#currentTrafficFlowEcharts").show();
+			}
+		},
+		error: function (errorResult) {
+			$("#currentTrafficFlowEchartsBody").unOverlay();
+			$('#currentTrafficFlowEcharts').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+			$("#currentTrafficFlowEcharts").show();
+		}
+	})
+}
+
+function currentTrafficFlowEcharts(xData, workData, restData) {
+	var objss = echarts.getInstanceByDom(document.getElementById('currentTrafficFlowEcharts'));
+	if (objss) objss.dispose();
+	var myChart = echarts.init(document.getElementById('currentTrafficFlowEcharts'));
+	option = {
+		title: {
+
+		},
+		legend: {
+			data: ['工作日', '非工作日']
+		},
+		tooltip: {
+			trigger: 'axis',
+			confine: true,
+			/* axisPointer: {
+			     type: 'cross',
+			     label: {
+			         backgroundColor: '#6a7985'
+			     }
+			 }*/
+			formatter: function (params, ticket, callback) {
+				//console.log(params);
+				var relVal = params[0].name + "时" + '<br />' + params[0].seriesName + ":" + params[0].value + "万人次" + '<br />';
+				if (params[1]) {
+					relVal += params[1].seriesName + ":" + params[1].value + "万人次";
+				}
+				return relVal;
+			}
+		},
+
+		grid: {
+			top: '17%',
+			left: '5%',
+			right: '13%',
+			bottom: '8%',
+			containLabel: true
+		},
+		xAxis: [{
+			type: 'category',
+			name: '时',
+			boundaryGap: false,
+			data: xData,
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+		}],
+		yAxis: [{
+			type: 'value',
+			name: '万人次',
+			splitLine: {
+				show: false
+			},
+			axisLine: {
+				lineStyle: {
+					color: '#929999',
+					width: 2
+				}
+			}
+
+		}],
+		series: [{
+				name: '工作日',
+				type: 'line',
+				label: {
+					normal: {
+						show: false,
+						position: 'top'
+					}
+				},
+				//areaStyle: {normal: {}},
+				itemStyle: {
+					normal: {
+						areaStyle: {
+							opacity: 0.4
+						},
+						color: webColor.config.areaColor[3]
+					}
+				},
+				data: workData
+			},
+			{
+				name: '非工作日',
+				type: 'line',
+				label: {
+					normal: {
+						show: false,
+						position: 'top'
+					}
+				},
+				//areaStyle: {normal: {}},
+				itemStyle: {
+					normal: {
+						areaStyle: {
+							opacity: 0.4
+						},
+						color: webColor.config.areaColor[1]
+					}
+				},
+				data: restData
+			}
+		]
+	};
+
+	myChart.setOption(option, true);
+}
+
+//本市 外市工作地Top5
+var workplaceData = [];
+var workplaceLinks = [];
+
+function workplaceEcharts(topDto, titleText) {
+	$("#p_titleText").text(titleText);
+	workplaceData = [];
+	workplaceLinks = [];
+	if (topDto == 'undefined') {
+		$('#workplaceEchartsBody').html('<div class="no-content" style="height:200px;padding-top:30%;"><p class="text-center col_white no-margin thinblue"><em class="icon_no_data"></em>暂无相关数据</p></div>');
+		return;
+	};
+	if (!topDto) {
+		return;
+	}
+	var liveBoard = topDto[0].boardName;
+	$.each(topDto, function (i, val) {
+		var dataElement = {};
+		dataElement.name = val.boardName;
+		dataElement.symbolSize = 10 * (6 - i);
+		dataElement.value = val.followValue;
+		dataElement.draggable = "true";
+		if (titleText.indexOf("本市") > -1) {
+			dataElement.itemStyle = {
+				normal: {
+					color: webColor.config.areaColor[0]
+				}
+			};
+		} else {
+			dataElement.itemStyle = {
+				normal: {
+					color: webColor.config.areaColor[1]
+				}
+			};
+		}
+		workplaceData.push(dataElement);
+		if (i != 0) {
+			var linksElement = {};
+			linksElement.source = liveBoard;
+			linksElement.target = val.boardName;
+			workplaceLinks.push(linksElement);
+		}
+
+	})
+
+	var objss = echarts.getInstanceByDom(document.getElementById('workplaceEcharts'));
+	if (objss) objss.dispose();
+	var myChart = echarts.init(document.getElementById('workplaceEcharts'));
+	option = {
+
+		/*  title: {
+		      text: titleText,
+		      textStyle:{
+		      	fontSize :12,
+		      }
+		  },*/
+
+		tooltip: {
+			formatter: function (params, ticket, callback) {
+				//console.log(params);
+				if (params.dataType == "edge") {
+					return null;
+				}
+				/*var relVal  = params[0].name+"时" + '<br />'+params[0].seriesName+":"+params[0].value+"人次"+'<br />';
+				if(params[1]) {
+					relVal += params[1].seriesName+":"+params[1].value+"人次";
+				}
+				return relVal;*/
+				if (params.value == 0) {
+					return null;
+				}
+				return params.name + ":" + params.value + "人";
+			}
+		},
+		animationDuration: 3000, //动画设置
+		animationEasingUpdate: 'quinticInOut',
+
+		//['#c23531','#2f4554', '#61a0a8', '#series[i]-graph', '#91c7ae','#749f83',  '#ca8622', '#bda29a','#6e7074', '#546570', '#c4ccd3'],
+		series: [{
+			//name: '广安门外',
+			type: 'graph',
+			layout: 'force', //采用力引导布局
+			force: {
+				repulsion: 400
+			},
+			data: workplaceData,
+			links: workplaceLinks,
+
+			focusNodeAdjacency: true,
+			roam: true,
+			label: {
+				normal: {
+
+					show: true,
+					position: 'top',
+
+				}
+			},
+			lineStyle: {
+				normal: {
+					color: 'source',
+					curveness: 0,
+					type: "solid"
+				}
+			}
+		}]
+	};
+	myChart.setOption(option, true);
+}
+
+function toFixedTwo(num) {
+	var dataArr = []
+	$.each(num, function (i, val) {
+		var pointData = parseFloat((val / 10000).toFixed(2));
+		dataArr.push(pointData);
+	})
+	return dataArr;
+}

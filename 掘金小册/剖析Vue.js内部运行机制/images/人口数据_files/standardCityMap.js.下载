@@ -1,0 +1,42 @@
+//放大
+ $('.map-container [data-citymap-tool="zoom-in"]').click(
+	        function () {
+	        gMap.gmap.zoomIn();
+          }
+ );
+ //缩小
+ $('.map-container [data-citymap-tool="zoom-out"]').click(
+		 function () {
+			 gMap.gmap.zoomOut();
+		 }
+ );
+ //下载
+ $('.ancillary-tools ul li:eq(0)').click(
+		 function () {
+			 gMap.downloadImg({containment:'parent'})
+		 }
+ );
+ 
+ //全屏
+ $('.map-container .ancillary-tools ul li:eq(1)').click(
+		 function () {
+			 //隐藏左边
+			 if($(".allLeftHide").css('display')=="none" || $("#rightModule").hide()=="none"){
+				 $(".allLeftHide:eq(0)").show();
+				 $(".allLeftHide:eq(0)").addClass('on');
+				 //隐藏右边
+				 $("#rightModule").show();
+				 $('.map-container').removeClass('map-tfull');
+				 $(this).find("a").attr("title","全屏");
+				 $(this).find("a em").addClass("iconbox icon_fullscreen").removeClass("icon_smallscreen");
+			 }else{
+				 $(".allLeftHide").hide();
+				 $(".allHideLi").removeClass('on');
+				 //隐藏右边
+				 $("#rightModule").hide();
+				 $('.map-container').addClass('map-tfull');
+				 $(this).find("a").attr("title","取消全屏");
+				 $(this).find("a em").addClass("iconbox icon_smallscreen").removeClass("icon_fullscreen");
+			 }
+		 }
+ ); 

@@ -1,0 +1,529 @@
+// 公共部分js
+$(function () {
+	//左侧js
+	// 页面右侧点击显示隐藏效果
+	/*$("#hideRight").click(function() {
+		$("#rightModule").toggle();
+	});*/
+	// 关闭按钮js
+	$("#but-closed").click(function () {
+		$("#left-data-cnt").toggle();
+	});
+
+	//左侧菜单js
+	$("#but-closed").click(function () {
+		$("#left-data-cnt").toggle();
+	});
+
+
+	// 数据选择、面积选择、指标选择的隐藏显示
+	$('.pages-container').off('click', '.panel-head>.but-collap');
+	$('.pages-container').on('click', '.panel-head>.but-collap', function () {
+		var tp = $(this);
+		var pbody = tp.parent().next();
+		if (pbody.css('display') == 'none') {
+			pbody.show()
+			tp.removeClass('fold');
+		} else {
+			pbody.hide();
+			tp.addClass('fold');
+		}
+		$('.main-data-container .nice-scroll').getNiceScroll().resize();
+	});
+	$('.pages-container').off('click', '#hideRight');
+	$('.pages-container').on('click', '#hideRight', function () {
+		var tp = $(this); //creat
+		var pbody = $("#rightModule"); //右边全体
+		console.log(pbody.css('display'));
+		if (pbody.css('display') == 'none') {
+			pbody.show()
+			tp.removeClass('fold');
+			$('.map-container').removeClass('map-tfull');
+		} else {
+			pbody.hide();
+			tp.addClass('fold');
+			$('.map-container').addClass('map-tfull');
+		}
+	});
+	//左侧js
+
+	//XX
+	$("#hideLeft_click").unbind();
+	$("#hideLeft_click").click(function () {
+		if ($("#dataChoose").hasClass("on")) {
+			$("#dataChoose").removeClass("on")
+		} else {
+			$("#dataChoose").addClass("on");
+		}
+		$("#hideLeft_m").toggle();
+	});
+	$("#showLeft_click").unbind();
+	$("#showLeft_click").click(function () {
+		if ($("#rightModule").css('display') == 'none') {
+			$("#dataChoose").removeClass("on");
+		} else {
+			$("#dataChoose").addClass("on");
+		}
+		$("#hideLeft_m").toggle();
+	});
+
+	// 头部start
+	// 顶部的菜单栏
+	$("#navbar").mouseover(function () {
+		$("#navMenu").show();
+	}).mouseout(function () {
+		$("#navMenu").hide();
+	});
+
+
+
+	/*
+	// 点击切换页面
+	$("#navMenu a").click(function() {
+			var p = $(this);
+			var key = p.attr("id");
+			 $.getJSON(contextPath+"/static/common/json/urlMapper.json", function (res){
+				 console.log(res);
+				 var urlobj = JSON.stringify(res[key]);				
+				 console.log('var obj='+JSON.parse(urlobj).url)
+				 var url = JSON.parse(urlobj).url;
+				 var urlName = JSON.parse(urlobj).name;
+                var cityName = $("#citySelect span").text();
+                $.getJSON(contextPath+"/static/common/json/cityinfo.json", function (data){
+                	console.log(data);
+                	console.log(cityName);
+                	var cityId = data[cityName];
+                	console.log(cityId);
+                	//城市信息存入cookie
+                	$.cookie('cityName', cityName,{ expires: 1, path: '/' }); 
+                	$.cookie('cityId', cityId,{ expires: 1, path: '/' }); 
+                	$.cookie('urlName', urlName,{ expires: 1, path: '/' }); 
+                	location.href=contextPath+url+'?cityName='+cityName+'&cityId='+cityId+"&urlName="+urlName;
+               })
+			 })
+			
+	})
+	
+	
+	//城市切换
+	
+  $('.gray9').next().find('a').click(function(){
+	var tp =$(this);
+	console.log("城市："+tp.text());
+	//获取菜单栏文字
+	var urlName = $("#navbar a span").text();
+	console.log(urlName);
+	var tmpUrlName = "";
+	if($("#specialStr").val() && urlName == "数据分析-地产大数据"){
+		tmpUrlName = urlName + "-" + $("#specialStr").val();
+	} else {
+		tmpUrlName = urlName;
+	}
+	console.log(tmpUrlName);
+	var key=changeurl(tmpUrlName);
+	$.getJSON(contextPath+"/static/common/json/urlMapper.json", function (res){
+		 console.log(res);
+		 var urlobj = JSON.stringify(res[key]);				
+		 console.log('var obj='+JSON.parse(urlobj).url)
+		 var url = JSON.parse(urlobj).url;
+		 var urlName = JSON.parse(urlobj).name;
+       var cityName = tp.text();
+       $.getJSON(contextPath+"/static/common/json/cityinfo.json", function (data){
+       	console.log(data);
+       	console.log(cityName);
+       	var cityId = data[cityName];
+       	console.log(cityId);
+      //城市信息存入cookie
+       	$.cookie('cityName', cityName,{ expires: 1, path: '/' }); 
+    	$.cookie('cityId', cityId,{ expires: 1, path: '/' }); 
+    	$.cookie('urlName', urlName,{ expires: 1, path: '/' }); 
+       	location.href=contextPath+url+'?cityName='+cityName+'&cityId='+cityId+"&urlName="+urlName;
+      })
+	 })
+})
+
+//切换热门城市
+$('.hot a').click(function(){
+	var tp =$(this);
+	console.log("城市："+tp.text());
+	//获取菜单栏文字
+	var urlName = $("#navbar a span").text();
+	console.log(urlName);
+	var tmpUrlName = "";
+	if($("#specialStr").val() && urlName == "数据分析-地产大数据"){
+		tmpUrlName = urlName + "-" + $("#specialStr").val();
+	} else {
+		tmpUrlName = urlName;
+	}
+	console.log(tmpUrlName);
+	var key=changeurl(tmpUrlName);
+	$.getJSON(contextPath+"/static/common/json/urlMapper.json", function (res){
+		 console.log(res);
+		 var urlobj = JSON.stringify(res[key]);				
+		 console.log('var obj='+JSON.parse(urlobj).url)
+		 var url = JSON.parse(urlobj).url;
+		 var urlName = JSON.parse(urlobj).name;
+       var cityName = tp.text();
+       $.getJSON(contextPath+"/static/common/json/cityinfo.json", function (data){
+       	console.log(data);
+       	console.log(cityName);
+       	var cityId = data[cityName];
+       	console.log(cityId);
+       	//城市信息存入cookie
+       	$.cookie('cityName', cityName,{ expires: 1, path: '/' }); 
+    	$.cookie('cityId', cityId,{ expires: 1, path: '/' }); 
+    	$.cookie('urlName', urlName,{ expires: 1, path: '/' }); 
+       	location.href=contextPath+url+'?cityName='+cityName+'&cityId='+cityId+"&urlName="+urlName;
+      })
+	 })
+})
+ */
+	// 弹框和关闭窗口
+
+	$("#citySelect").click(function () {
+		popup($("#modalDialog"));
+	});
+
+	$("#closeWindow").click(function (e) {
+		// 阻止事件冒泡，防止波及本按钮
+		e.stopPropagation();
+		// 隐藏弹窗
+		$('#modalDialog').hide();
+	});
+
+	$("#btn-back").click(function () {
+		$("#main-data").hide();
+	});
+	//点击左侧菜单事件
+	$(".dataLeftMenu").click(function () {
+		$(".allLeftHide").hide();
+		var divId = $(this).data('target');
+		if ($("#" + divId + "Li").hasClass("on")) {
+			$("#" + divId + "Li").removeClass("on");
+		} else {
+			$(".allHideLi").removeClass('on');
+			$("#" + divId + "Li").addClass("on");
+			$("#" + divId).show();
+		}
+		$('.nice-scroll').getNiceScroll().resize();
+	});
+	//点击面板×事件
+	$(".hideAllPanel").click(function () {
+		$(".allLeftHide").hide();
+		$(".allHideLi").removeClass('on');
+	});
+	$(".legend-container a").click(function () {
+		if ($(this).next(".legend-container .legendbox").css("display") == "none") {
+			$(this).next(".legend-container .legendbox").show(200);
+		} else {
+			$(this).next(".legend-container .legendbox").hide(200);
+		}
+	})
+
+	// 弹框公共方法
+	function popup(popupName) {
+		var _scrollHeight = $(document).scrollTop(), // 获取当前窗口距离页面顶部高度
+			_windowHeight = $(window).height(), // 获取当前窗口高度
+			_windowWidth = $(window).width(), // 获取当前窗口宽度
+			_popupHeight = popupName.height(), // 获取弹出层高度
+			_popupWeight = popupName.width(); // 获取弹出层宽度
+		_posiTop = (_windowHeight - _popupHeight) / 2 + _scrollHeight;
+		_posiLeft = (_windowWidth - _popupWeight) / 2;
+		popupName.css({
+			"left": _posiLeft + "px",
+			"top": _posiTop + "px",
+			"display": "block"
+		}); // 设置position
+	};
+
+	// 头部end
+
+
+	// 方法区域start
+	function changeurl(urlname) {
+		var url = "resource";
+		switch (urlname) {
+			case "数据分析-资源大数据":
+				url = "resource";
+				break;
+			case "数据分析-潜客大数据":
+				url = "customer";
+				break;
+			case "数据分析-地产大数据":
+				url = "land";
+				break;
+			case "数据分析-地产大数据-secondHouse":
+				url = "secondHouse";
+				break;
+			case "数据分析-地产大数据-house":
+				url = "house";
+				break;
+			case "数据分析-经济大数据":
+				url = "macroscopic";
+				break;
+			default:
+				break;
+		}
+		return url;
+	}
+
+	//接收城市参数
+	function getParam(urlName, cityName) {
+		//如果 cityName为空的时候，则去获取一下urlName的值
+
+		if (urlName == null && cityName != null) {
+			//urlName = $("#navbar a span").text(); 假设拿到
+			urlName = "地产大数据";
+			console.log("urlname" + urlName);
+
+		}
+
+		if (cityName == null && urlName != null) {
+			cityName = $("#citySelect").text();
+			console.log(cityName);
+		}
+		var param = {
+			"urlName": urlName,
+			"cityName": cityName
+		};
+		return param;
+	}
+
+	//默认城市为北京
+	function getCityName() {
+		var cityName = $("#citySelect span").text();
+		console.log(cityName);
+		if (cityName == null) {
+			$("#citySelect span").text("北京");
+		} else {
+			$("#citySelect span").text("${cityName}");
+		}
+	}
+	//方法区域 end
+
+
+})
+
+//遮罩loading
+$.fn.overlay = function (opts) {
+	this.css('position', 'relative');
+
+	opts = opts || {};
+
+	var style = '';
+	for (var k in opts.css || {})
+		style += k + ':' + opts.css[k] + ';';
+
+	var content = '';
+	if (opts.text) {
+		content = '<p style="color:#ccc;font-size:10px;">' + opts.text + '</p>'
+	}
+
+	this.append('<div class="mOverlay" style="z-index: 1000; border: medium none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; position: absolute;' + style + '">\
+	<div class="citymap-loading-box common-loading"><div class="citymap-common-loading"><div class="citymap-load-container">\
+	<div class="load-container load-jm">\
+		<div class="outsider-circle">\
+		<div class="inside-circle">\
+			<p class="load-text">Loading</p>\
+		</div>\
+		</div>\
+		<div class="outer-circle_border"></div>\
+		<div class="inside-circle_border"></div>\
+	</div><p>' + content + '</p></div></div></div>\
+	</div>');
+}
+$.fn.unOverlay = function () {
+	this.find('.mOverlay').remove();
+}
+
+$.fn.loading = function (content) {
+	var strHtml = '<div class="citymap-loading-box common-loading"><div class="citymap-common-loading"><div class="citymap-load-container">\
+	<div class="load-container load-jm">\
+		<div class="outsider-circle">\
+		<div class="inside-circle">\
+			<p class="load-text">Loading</p>\
+		</div>\
+		</div>\
+		<div class="outer-circle_border"></div>\
+		<div class="inside-circle_border"></div>\
+  	</div></div></div></div>';
+	this.append(strHtml);
+	return this;
+}
+$.fn.Coverloading = function (content) {
+	var strHtml = '<div class="citymap-loading-box common-loading"><div class="citymap-common-loading"><div class="citymap-load-container">\
+	<div class="load-container load-jm">\
+		<div class="outsider-circle">\
+		<div class="inside-circle">\
+			<p class="load-text">Loading</p>\
+		</div>\
+		</div>\
+		<div class="outer-circle_border"></div>\
+		<div class="inside-circle_border"></div>\
+	</div></div></div>';
+	this.html(strHtml);
+	return this;
+}
+//取消loading效果
+$.fn.unLoading = function () {
+	this.find('.common-loading').remove();
+	return this;
+}
+
+
+//#region 页面分页方法   By  jinbo.ma 2017-06
+/*
+ **id：分页所在容器的ID
+ **pageIndex：当前页
+ **pageSize：分页大小
+ **TotalCount：数据总数
+ **showPageNum：要显示分页的个数
+ **callback：回调函数
+ */
+$.PageIndex = function (id, pageIndex, pageSize, TotalCount, showPageNum, callback) {
+
+	pageIndex *= 1;
+	pageSize *= 1;
+	TotalCount *= 1;
+	showPageNum *= 1;
+
+	var startNum = 0;
+	var endNum = 0;
+
+	//最终要显示的分页的个数
+	var _showNum = window.Math.ceil(TotalCount / pageSize);
+	var maxPage = _showNum;
+	if (_showNum > showPageNum) { //计算出来的页数，大于要显示的页数
+
+		_showNum = showPageNum;
+
+		var halfShowNum = 0;
+		if (_showNum % 2 == 0) { //要显示的页数能被2整除
+			halfShowNum = (_showNum - 2) / 2;
+			startNum = pageIndex - halfShowNum;
+			endNum = pageIndex + halfShowNum + 1;
+		} else { //要显示的页数不能被2整除
+			halfShowNum = (_showNum - 1) / 2;
+			startNum = pageIndex - halfShowNum;
+			endNum = pageIndex + halfShowNum;
+		}
+
+		if (startNum <= 0) {
+			startNum = 1;
+			endNum = _showNum;
+		}
+
+		if (endNum > maxPage) {
+			endNum = maxPage;
+			startNum = endNum - _showNum - 1;
+		}
+
+	} else { //如果计算出来的页数少于要显示的页数，那么全部显示
+		startNum = 1;
+		endNum = _showNum;
+	}
+
+
+	//var strdot = '<li><a>...</a></li>';
+	var strHtml = '<ul class="pagebox clearfix" id="">';
+
+	//上一页
+	if (pageIndex - 1 > 0) {
+		strHtml += ' <li class="forhead"><a href="javascript:" data-page="' + (pageIndex - 1) + '"><font>‹</font></a></li>';
+	}
+
+	for (var i = startNum; i <= endNum; i++) {
+		strHtml += '<li><a href="javascript:" ' + (i == pageIndex ? ' class="page_on" data-cuerrentpage="' + i + '"' : '') + ' data-page="' + i + '">' + i + '</a></li>';
+	}
+	//下一页
+	if (pageIndex + 1 <= maxPage)
+		strHtml += '<li class="forback"><a href="javascript:" data-page="' + (pageIndex + 1) + '"><font>›</font></a></li>';
+
+	strHtml += '<li>&nbsp;&nbsp;&nbsp;转至 <input class="f_inpbox fg_w17" name="txtPG"> 页 <a href="javascript:" class="but_confirm">确定</a></li>';
+
+	strHtml += '</ul>';
+	$('#' + id).html(strHtml);
+
+
+	$('#' + id).find('li').click(function () {
+		var _pageIndex = $(this).find('a').attr('data-page');
+		if (_pageIndex != _pageIndex * 1) //拦截掉不是有效分页的a标签
+			return;
+		if (typeof callback == 'function') callback(_pageIndex);
+	});
+
+	//确定
+	$('#' + id).find('.but_confirm').unbind('click').click(function () {
+		var value = $('#' + id + ' input[name=txtPG]').val();
+		var currentpage = $('#' + id + ' .page_on').attr('data-cuerrentpage');
+		if (value != value * 1 || value == currentpage || value < 1 || value > maxPage) return;
+		$('#' + id + ' input[name=txtPG]').val('');
+		if (typeof callback == 'function') callback(value);
+	});
+}
+//#endregion
+$(function () {
+	$('body').append('<div class="compatible_box" style="display:none">\
+	</div>')
+
+	function getPath(path) {
+		return basePath + path;
+	}
+
+	function myBrowser() {
+		var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串
+		var isOpera = userAgent.indexOf("Opera") > -1; //判断是否Opera浏览器
+		var isIE = userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1 && !isOpera; //判断是否IE浏览器
+		var isIE11 = userAgent.indexOf('Trident') > -1 && userAgent.indexOf("rv:11.0") > -1; //判断是都是IE11浏览器
+		var isFF = userAgent.indexOf("Firefox") > -1; //判断是否Firefox浏览器
+		var isSafari = userAgent.indexOf("Safari") > -1; //判断是否Safari浏览器
+		if (isIE) {
+			var IE5 = IE55 = IE6 = IE7 = IE8 = false;
+			var reIE = new RegExp("MSIE (\\d+\\.\\d+);");
+			reIE.test(userAgent);
+			var fIEVersion = parseFloat(RegExp["$1"]);
+			IE55 = fIEVersion == 5.5;
+			IE6 = fIEVersion == 6.0;
+			IE7 = fIEVersion == 7.0;
+			IE8 = fIEVersion == 8.0;
+			return parseFloat(fIEVersion) > 10;
+		}
+
+		if (isIE11) {
+			return false;
+		}
+		return true;
+	}
+
+	if (!myBrowser()) {
+
+		$('.wrapper>.pages-container').prepend('<div class="explainbox"><a href="javascript:;" class="fr btn_close">×</a><div class="excnt clearfix"><p class="phcolor no-margin"><em class="icon_alert"></em>当前浏览器版本较低，影响部分功能使用。请更换成谷歌、火狐、Edge或者360极速浏览器，谢谢。</p></div></div>');
+		$(".compatible_box").html('<div class="compatible">\
+            <span class="compatible_close">×</span>\
+            <p class="compat_tips">当前浏览器对部分功能不兼容，使用以下浏览器再试试吧~~</p>\
+            <div class="browser_icon clearfix">\
+                <dl class="jisu fl">\
+                    <dt><a href="http://chrome.360.cn/"><img class="liulanqi" src="' + getPath('/static/images/360.png') + '"><img class="compat_shadow" src="' + getPath('/static/images/shadow.png') + '"></a></dt>\
+                    <dd>360极速浏览器</dd>\
+                </dl>\
+                <dl class="guge fl">\
+                    <dt><a href="http://rj.baidu.com/soft/detail/14744.html?ald"><img class="liulanqi" src="' + getPath('/static/images/guge.png') + '"><img class="compat_shadow" src="' + getPath('/static/images/shadow.png') + '"></a></dt>\
+                    <dd>谷歌浏览器</dd>\
+                </dl>\
+                <dl class="huohu fl">\
+                    <dt><a href="http://www.firefox.com.cn/"><img class="liulanqi" src="' + getPath('/static/images/huohu.png') + '"><img class="compat_shadow" src="' + getPath('/static/images/shadow.png') + '"></a></dt>\
+                    <dd>火狐浏览器</dd>\
+                </dl>\
+            </div>\
+        </div>');
+		console.log(343434);
+		$(".compatible_box").show();
+		$(".compatible_close").click(function () {
+			$(".compatible_box").hide();
+		})
+		$('.wrapper .explainbox>.btn_close').click(
+			function () {
+				$('.wrapper .explainbox').remove();
+			});
+	}
+})

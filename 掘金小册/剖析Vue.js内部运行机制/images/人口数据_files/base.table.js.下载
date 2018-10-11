@@ -1,0 +1,1159 @@
+﻿(function ($) {
+    //无数据
+    $.NoContent = function (id) { if (typeof id != 'undefined') $('#' + id).html('<div class="no_content clearfix"><div class="fl"><img src="http://js.soufunimg.com/industry/commonimages/ico_point.png" width="65" height="65" /></div><div class="fl ml15 font16"><p>没有符合当前条件的结果！</p><p>请在条件区更改条件后重新检索或统计。</p></div></div>'); }
+    $.fn.NoContent = function (msg) { this.html('<div class="no_content clearfix"><div class="fl"><img src="http://js.soufunimg.com/industry/commonimages/ico_point.png" width="65" height="65" /></div><div class="fl ml15 font16">' + (msg || '<p>没有符合当前条件的结果！</p><p>请在条件区更改条件后重新检索或统计。</p>') + '</div></div>'); }
+    //异步加载遮罩层
+    $.Overlay = function (id) { $.unOverlay(id); return '<div class="mOverlay" style="z-index: 4000; border: medium none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; background-color: rgb(245, 245, 245); position: absolute; opacity: 0.5;"><img src="http://js.soufunimg.com/industry/commonjs/lazyload/o_loading.gif" style="position: absolute;top:48%;left:48%;"></div>'; }
+    $.fn.Overlay = function () {
+        this.css('position', 'relative').find('.mOverlay').remove();
+        this.append('<div class="mOverlay" style="z-index: 1000; border: medium none; margin: 0px; padding: 0px; width: 100%; height: 100%; top: 0px; left: 0px; background-color: rgb(245, 245, 245); position: absolute; opacity: 0.5;"><img src="http://js.soufunimg.com/industry/commonjs/lazyload/o_loading.gif" style="position: absolute;top:48%;left:48%;"></div>');
+    }
+    $.unOverlay = function (id) { if (typeof id == 'undefined') $('.mOverlay').remove(); else $('#' + id).find('.mOverlay').remove(); }
+    $.fn.unOverlay = function () { this.find('.mOverlay').remove(); }
+
+    //loading 效果
+    $.fn.loading = function (content) {
+        this.html('<div class="common-loading"><div style="padding:15px 30px 30px;"><div style="text-align:center;padding:30px 0;"><div style="width:52px;height:52px;margin:0 auto;"><img width="40" height="40" src="http://js.soufunimg.com/industry/commonjs/lazyload/o_loading.gif"></div><div class="font14 mt10 gray6">' + (content || '正在加载') + '</div></div></div></div>');
+        return this;
+    }
+    //取消loading效果
+    $.fn.unLoading = function () {
+        this.find('.common-loading').remove();
+        return this;
+    }
+    $.fn.buttonLoading = function (status, text) {
+        if (status == 'success') {
+            this.text(text || '');
+        }
+        else if (status == 'loading') {
+            var t = this.text();
+            this.data('txt', t).
+                text(typeof text == 'undefined' ? 'loading...' : text).
+                addClass('btn_loading');
+        }
+        else if (status == 'reset') {
+            if (this.hasClass('btn_loading')) {
+                var t = this.data('txt') || '';
+
+                this.removeData('txt').
+                    text(t).
+                    removeClass('btn_loading');
+            }
+        }
+        return this;
+    }
+    //分页
+    $.mPage = {
+        //绑定每页大小
+        bPageSize: function (textObjs, pgSizeObjs, sizes, callback) {
+            textObjs = (typeof textObjs == 'string') ? $('#' + textObjs) : textObjs;
+            pgSizeObjs = (typeof pgSizeObjs == 'string') ? $('#' + pgSizeObjs) : pgSizeObjs;
+            var _str = '';
+            $.each(sizes, function (i, j) {
+                _str += string.format('<a class="f_optionbox clearfix" href="javascript:" pSize="{0}">{0}</a>', j);
+            });
+            pgSizeObjs.html(_str);
+            //绑定事件
+            (function () {
+                //鼠标点击展开下拉框事件
+                $.each(textObjs, function (i, j) {
+                    $.documentClick($(j).parent(), $(pgSizeObjs[i]));
+                    var temp = j;
+                    $(temp).parent().unbind('click').click(function () {
+                        var t = this;
+                        var _c = $(this).parent().children()[1];
+                        if (typeof _c != 'undefined') {
+                            $(_c).find('a').show();
+                            var s = $(temp).text();
+                            $(_c).find('a[psize=' + s + ']').hide();
+
+                            $(this).addClass('f_select_on');
+                            $(_c).fadeIn('normal');
+                            $(_c).find('a').unbind('click').click(function () {
+                                var _psize = $(this).attr('pSize');
+                                if (parseInt(_psize) == _psize) {
+                                    $(temp).text(_psize)
+                                    textObjs.parent().removeClass('f_select_on');
+                                    pgSizeObjs.hide();
+                                    callback(_psize);
+                                }
+                            });
+                        }
+                    });
+                });
+
+            })();
+        },
+        //reutrn {pageCount:num}获取分页字符串代码
+        //总条数,每页大小,最大也显示页码数量
+        bPage: function (pg, totalCount, pSize, maxPageNumber, pgObjs, callback) {
+            var me = this;
+            pgObjs = typeof pgObjs == 'string' ? $('#' + pgObjs) : pgObjs;
+            var _num = ((Number(totalCount) - 1) / Number(pSize)).toString();
+            _num = _num.split('.')[0];
+            var pageCount = string.toFixed(Number(_num) + 1, 0);
+            pgObjs.html(me.getStr(pg, parseInt(pageCount), maxPageNumber));
+            pgObjs.find('a').unbind('click').click(function () {
+                var pg = $(this).attr('pg');
+                if (pg != undefined && parseInt(pg) == pg)
+                    callback(pg);
+            });
+            pgObjs.find('.but_confirm').unbind('click').click(function () {
+                var temp = this;
+                var _value = pgObjs.find('input[name=txtPG]').val();
+                //判断是否为数字且是否小于最大页数
+                if (parseInt(_value) != _value || parseInt(_value) == 0) { messagePrompt('请输入正确的页码'); pgObjs.find('input[name=txtPG]').val(''); return; }
+                if (parseInt(_value) > pageCount) { messagePrompt('输入数字大于总页数'); pgObjs.find('input[name=txtPG]').val(1); return; }
+                callback(_value);
+            });
+            pgObjs.find('input[name=txtPG]').unbind('keydown').keydown(function (e) {
+                if (e.which == 13) {
+                    pgObjs.find('.but_confirm').click();
+                }
+            });
+            //返回总页数
+            var info = new Object();
+            info.pageCount = pageCount;
+            return info;
+        },
+        //列表上方分页
+        bPage2: function (pg, totalCount, pSize, pgObjs, callback) {
+            function _bPage2(_pg, _totalCount, _pSize, _pgObjs, _callback) {
+                var _num = ((Number(_totalCount) - 1) / Number(_pSize)).toString();
+                _num = _num.split('.')[0];
+                var _pageCount = string.toFixed(Number(_num) + 1, 0);
+                _pg = parseInt(_pg);
+                var _str = '<a  ' + (_pg > 1 ? 'href="javascript:" class="rs_pon" pg="' + (_pg - 1) + '"' : '') + '>‹</a>';
+                _str += '<span>' + _pg + '/' + _pageCount + '</span>';
+                _str += '<a ' + (_pg < _pageCount ? 'href="javascript:" class="rs_pon" pg="' + (_pg + 1) + '" ' : '') + '>›</a>';
+                this.pageCount = _pageCount;
+                _pgObjs = typeof _pgObjs == 'string' ? $('#' + _pgObjs) : _pgObjs;
+                _pgObjs.html(_str);
+                _pgObjs.find('a').unbind('click').click(function () {
+                    var pg = $(this).attr('pg');
+                    if (pg != undefined && parseInt(pg) == pg)
+                        callback(pg);
+                })
+            }
+            return new _bPage2(pg, totalCount, pSize, pgObjs, callback);
+        },
+        //获取分页字符串
+        getStr: function (page, pageCount, maxPageNumber) {
+            var lrpage = maxPageNumber / 2;
+            var Number = lrpage - 2;
+            page = parseInt(page);
+            var _strHtml = '';
+            if (page > 1) {
+                _strHtml += '<li><a href="javascript:" pg="' + (page - 1) + '"><font>‹</font></a></li>';
+            }
+            if (pageCount <= maxPageNumber) {
+                for (var i = 1; i <= pageCount; i++) {
+                    if (page == i) {
+                        _strHtml += '<li><a class="page_on">' + i.toString() + '</a></li>';
+                    } else {
+                        _strHtml += string.format('<li><a href="javascript:"  pg="{0}">{0}</a></li>', i.toString())
+                    }
+                }
+            }
+            else {
+                if (page < lrpage) {
+                    for (var i = 1; i < lrpage + 2; i++) {
+                        if (page == i)
+                            _strHtml += string.format('<li><a class="page_on">{0}</a></li>', page);
+                        else
+                            _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                    _strHtml += '<li><a>...</a></li>';
+                    _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', pageCount);
+                }
+                else if (page == lrpage) {
+                    for (var i = 1; i < page; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+
+                    _strHtml += string.format('<li><a class="page_on">{0}</a></li>', page);
+                    for (var i = page + 1; i <= page + Number; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                    _strHtml += '<li><a>...</a></li>';;
+                    _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', pageCount);
+                }
+                else if (page > lrpage && (page <= pageCount - lrpage)) {
+                    _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', '1');
+                    _strHtml += '<li><a>...</a></li>';;
+
+                    for (var i = page - Number; i <= page - 1; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                    _strHtml += string.format('<li><a class="page_on">{0}</a></li>', page);
+                    for (var i = page + 1; i <= page + Number; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                    _strHtml += '<li><a>...</a></li>';;
+                    _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', pageCount.toString());
+
+                }
+                else if (page > pageCount - lrpage) {
+                    _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', 1);
+                    _strHtml += '<li><a>...</a></li>';;
+                    for (var i = page - Number; i <= page - 1; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                    _strHtml += string.format('<li><a  class="page_on">{0}</a></li>', page);
+                    for (var i = page + 1; i <= pageCount; i++) {
+                        _strHtml += string.format('<li><a href="javascript:" pg="{0}">{0}</a></li>', i.toString());
+                    }
+                }
+            }
+
+            if (page < pageCount) {
+                _strHtml += '<li><a href="javascript:" pg="' + (page + 1) + '"><font>›</font></a></li>';
+            }
+            if (pageCount > maxPageNumber)
+                _strHtml += ' <li>&nbsp;&nbsp;&nbsp;转至 <input class="f_inpbox fg_w17" name="txtPG"> 页 <a href="javascript:" class="but_confirm">确定</a></li>';
+            return _strHtml;
+        }
+    };
+    //排序
+    $.mOrder = {
+        /*type :outer 排序外部  columns[{column:'',orderType:'asc',text:''}] args:显示文本容器,显示排序内容容器 ,callback回调方法
+          type :table 表头上    columns: [['column1', 4], ['column2', 5], ['column3', 6], ['dAddTime', 8]]列顺序      
+                args:容器ID,ordertype,orderText,callback*/
+        init: function (type, columns, args) {
+            var me = this;
+            me.columns = columns;
+            if (arguments[0] == 'outer') {
+                var textObjs = arguments[2];
+                var contentObjs = arguments[3];
+                var callback = arguments[4];
+                //绑定默认值
+                (function () {
+                    var _str = '';
+                    $.each(columns, function (i, j) {
+                        _str += '<a href="javascript:" column="' + j.column + '"  orderType="' + j.orderType + '" class="f_optionbox clearfix">' + j.text + '</a>';
+                    });
+                    contentObjs.html(_str);
+                })();
+                //绑定事件
+                (function () {
+                    $.each(textObjs, function (i, j) {
+                        $.documentClick($(j).parent(), $(contentObjs[i]));
+                        var temp = j;
+                        //点击展开
+                        $(temp).parent().unbind('click').click(function () {
+                            //alert(this.className);
+                            var t = this;
+                            var _c = $(this).parent().children()[1];
+                            if (typeof _c != 'undefined') {
+                                $(_c).fadeIn('normal');
+                                $(this).addClass('f_select_on');
+                                $(_c).find('a').unbind('click').click(function () {
+                                    var info = new Object();
+                                    info.column = $(this).attr('column');
+                                    info.orderType = $(this).attr('orderType');
+                                    var text = $(this).text();
+                                    text = text.length > 5 ? text.substr(0, 5) : text;
+                                    textObjs.text('排序:' + text).removeClass('f_select_on');
+                                    contentObjs.hide();
+                                    $(t).removeClass('f_select_on');
+                                    callback(info);
+                                });
+                            }
+                        });
+                    });
+
+                })();
+            } else if (arguments[0] == 'table') {
+                this.container = arguments[2];
+                this.ordertype = arguments[3];
+                this.orderText = arguments[4];
+                this.callback = arguments[5];
+
+                var container = arguments[2];
+                var ordertype = arguments[3];
+                var orderText = arguments[4];
+                var callback = arguments[5];
+
+
+                $.mOrder.setDefaultCSS(columns, container);
+                $('#' + container + ' table tr th a[ordercolumns="' + orderText + '"]').find('em[ordertype=' + ordertype + ']')
+                    .addClass(ordertype == 'asc' ? 'b_up_on' : 'b_down_on')
+
+                //每次查询改变样式
+                $.each(columns, function (i, j) {
+                    $('#' + container + ' table tr th:nth-child(' + j[1] + ')').find('a').unbind('click').click(function () {
+                        var _index = $(this).parent().index() + 1;
+                        var _ordercolumns = $(this).attr('ordercolumns');
+                        var _ordertype = '';
+                        if (orderText == _ordercolumns) {
+                            _ordertype = ordertype == 'desc' ? 'asc' : 'desc';
+                            //是当前列排序 修改排序方式
+                            $('#' + container + ' table tr th:nth-child(' + _index + ')').find('a')
+                                .removeClass('b_up_on').removeClass('b_down_on');
+                            $(this).addClass(_ordertype == 'desc' ? 'b_down_on' : 'b_up_on');
+                        }
+                        else {
+                            _ordertype = 'desc';
+                            //所有的恢复默认箭头
+                            me._hfCSS(columns, container);
+                            $(this).addClass(_ordertype == 'desc' ? 'b_down_on' : 'b_up_on');
+                        }
+
+                        var info = new Object();
+                        info.ordercolumn = _ordercolumns;
+                        info.ordertype = _ordertype;
+                        //回调方法
+                        callback(info);
+                    });
+                });
+            }
+
+            if (typeof $.mOrder.init._initialized == 'undefined') {
+                $.mOrder.init._initialized = true;
+                $.mOrder.init.prototype.setClick = function () {
+                    var _met = this;
+                    //每次查询改变样式
+                    $.each(_met.columns, function (i, j) {
+                        $('#' + _met.container + ' table tr th:nth-child(' + j[1] + ')').find('a').unbind('click').click(function () {
+                            var _index = $(this).parent().index() + 1;
+                            var _ordercolumns = $(this).attr('ordercolumns');
+                            var _ordertype = '';
+                            if (_met.orderText == _ordercolumns) {
+                                _ordertype = _met.ordertype == 'desc' ? 'asc' : 'desc';
+                                //是当前列排序 修改排序方式
+                                $('#' + container + ' table tr th:nth-child(' + _index + ')').find('a')
+                                    .removeClass('b_up_on').removeClass('b_down_on');
+                                $(this).addClass(_ordertype == 'desc' ? 'b_down_on' : 'b_up_on');
+                            }
+                            else {
+                                _ordertype = 'desc';
+                                //所有的恢复默认箭头
+                                $.mOrder._hfCSS(columns, container);
+                                $(this).addClass(_ordertype == 'desc' ? 'b_down_on' : 'b_up_on');
+                            }
+
+                            var info = new Object();
+                            info.ordercolumn = _ordercolumns;
+                            info.ordertype = _ordertype;
+                            //回调方法
+                            _met.callback(info);
+                        });
+                    });
+                }
+            }
+        },
+        //设置默认样式
+        setDefaultCSS: function (columns, container) {
+            $.each(columns, function (i, j) {
+                var thText = $($('#' + container + ' table tr th:nth-child(' + j[1] + ')')[0]).html();
+                var ordertext = '<a href="javascript:" class="sxbox" ordercolumns="' + j[0] + '">' + thText + '<span class="tb_tool"><em class="but_up"  ordertype="asc"></em><em class="but_down" ordertype="desc"></em></span></a>';
+                $('#' + container + ' table tr th:nth-child(' + j[1] + ')').html(ordertext);
+            });
+        },
+        _hfCSS: function (columns, container) {
+            $.each(columns, function (i, j) {
+                var thText = $($('#' + container + ' table tr th:nth-child(' + j[1] + ')')[0]).text();
+                var ordertext = '<a href="javascript:" class="sxbox">' + thText + '<span class="tb_tool"><em class="but_up" ordertype="asc"></em><em class="but_down" ordertype="desc"></em></span></a>';
+                $('#' + container + ' table tr th:nth-child(' + j[1] + ')').find('em').removeClass('b_down_on').removeClass('b_up_on');
+            });
+        }
+    };
+    //(设置指标)
+    function mjIndex(textObj, contentObjs, columns, callback, configure) {
+        this.textObj = typeof textObj == 'string' ? $('#' + textObj) : textObj;
+        this.contentObjs = typeof contentObjs == 'string' ? $('#' + contentObjs) : contentObjs;;
+        this.callback = callback;
+        //configure 配置
+        if (typeof configure == 'object') {
+            this.maxlen = configure.maxlen; //限制最大选择
+            this.minlen = configure.minlen; //限制最小选择
+            this.spanWidth = configure.spanWidth; //span宽度
+            this.isShowUnit = configure.isShowUnit;//是否显示单位
+        }
+        this.titleText = (!configure || !configure.titleText) ? '选择需要显示的指标' : configure.titleText;
+        var me = this;
+        //初始默认
+        (function () {
+            var _strContent = '<div class="p101515">';
+            var _indexCount = 0, _checkedCount = 0;
+            for (var k = 0; k < columns.length; k++) {
+                _indexCount += columns[k].indexs.length;
+                _strContent += '<dl class="opt_form01 clearfix">';
+                _strContent += '<dt class="fg_w07"><p>' + columns[k].title + '：</p><p><a class="blue01" href="javascript:" name="checkedAll">全选</a>&nbsp;|&nbsp;<a class="blue01" href="javascript:" name="unChecked">反选</a></p></dt>';
+                //-------------------------------
+                _strContent += '<dd class="fg_w15">';
+
+                $.each(columns[k].indexs, function (i, j) {
+                    _checkedCount += j.isCheck ? 1 : 0;
+                    var spanText = j.text;//显示文本
+                    if (me.isShowUnit && typeof j.unit != 'undefined') spanText += '(' + j.unit + ')';
+                    var spanStyle = typeof me.spanWidth == 'undefined' ? '' : 'style="width:' + me.spanWidth + 'px;"';
+                    _strContent += '<span ' + spanStyle + '><input type="checkbox" unit="' + (typeof j.unit == 'undefined' ? '' : j.unit) + '" text="' + j.text + '"  tofixed="' + (typeof j.tofixed == 'undefined' ? '' : j.tofixed) + '"  class="form_check" ' + (j.isCheck ? 'checked="checked"' : '') + ' value="' + j.column + '" name="">' + spanText + (j.column == 'fCycle' ? '(<a href="' + DomainName + '/User/AnalysisConditions?t=clearcycle" class="blue01" target="blank">设置</a>)' : '') + '</span>';
+                });
+                _strContent += '</dd>';
+                //-------------------------------
+                _strContent += '</dl>';
+                if (k < columns.length - 1) _strContent += '<div class="linebox"></div>';
+            }
+            _strContent += '</div>';
+            //var _strTitle = '<div style=" left:5%;" class="icon_caret02"></div>';
+            var _strTitle = '<div class="option_tit clearfix">';
+            _strTitle += '<span class="butbox fr"><a class="but_confirm" href="javascript:">确定</a><a class="but_cancel" style="margin-left:10px;" href="javascript:">取消</a></span>';
+            _strTitle += '<b>' + me.titleText + '(<span class="checkedCount">' + _checkedCount + '</span>/' + _indexCount + ')</b>';
+            _strTitle += '<span style="margin-left:20px;color:red;" name="indexsError"></span>';
+            _strTitle += '</div>';
+            me.contentObjs.find('.mj_table_contetindex').html(_strTitle + _strContent);
+        })();
+        me.mjh = $.mjHiddenWindow($.HiddenColumns.textIDs, $.HiddenColumns.contentIDs);
+        (function event() {
+            me.textObj.unbind('click').click(function () {
+                me.contentObjs.fadeIn('normal');
+                me.textObj.addClass('f_select_on');
+                me.mjh.hide(this);
+            });
+            //取消事件
+            me.contentObjs.find('a[class=but_cancel]').unbind('click').click(function () {
+                me.contentObjs.hide();//隐藏
+                me.textObj.removeClass('f_select_on');
+                var objs = me.contentObjs.find('input[type=checkbox]');
+                objs.removeProp('checked');
+                $.each(objs, function (i, j) {
+                    if (me.arr.where({ value: j.value, column: 'column' }).length > 0)
+                        j.checked = true;
+                });
+                getboxSum();
+            });
+
+            //全选事件
+            me.contentObjs.find('a[name=checkedAll]').unbind('click').click(function () {
+                var _temp = this;
+                var dl = $(_temp).parent().parent().parent();
+                dl.find('input[type=checkbox]').prop('checked', 'checked');
+                getboxSum();
+            });
+
+            //反选事件
+            me.contentObjs.find('a[name=unChecked]').unbind('click').click(function () {
+                var _temp = this;
+                var dl = $(_temp).parent().parent().parent();
+
+                var _ck = dl.find('input[type=checkbox]:checked');
+                dl.find('input[type=checkbox]').prop('checked', 'checked');
+                _ck.removeProp('checked');
+                getboxSum();
+            });
+
+            //指标点击事件
+            me.contentObjs.find('input[type=checkbox]').unbind('click').click(function () {
+                getboxSum();
+            })
+
+            //确定事件
+            me.contentObjs.find('a[class=but_confirm]').unbind('click').click(function () {
+                //验证
+                var length = getboxSum();
+                if (typeof me.maxlen != 'undefined' && parseInt(me.maxlen) == me.maxlen && me.maxlen > 0) {
+                    if (length > me.maxlen) {
+                        var errorObj = me.contentObjs.find('span[name=indexsError]');
+                        errorObj.text('最多选择' + me.maxlen + '项');
+                        var st = setInterval(function () {
+                            errorObj.text('');
+                            window.clearInterval(st);
+                        }, 2000);
+                        return;
+                    }
+                }
+                if (typeof me.minlen != 'undefined' && parseInt(me.minlen) == me.minlen && me.minlen > 0) {
+                    if (length < me.minlen) {
+                        var errorObj = me.contentObjs.find('span[name=indexsError]');
+                        errorObj.text('最少必须选择' + me.minlen + '项');
+                        var st = setInterval(function () {
+                            errorObj.text('');
+                            window.clearInterval(st);
+                        }, 2000);
+                        return;
+                    }
+                }
+                //获取选中的值
+                getColumns();
+                me.callback(me.arr);
+                me.textObj.removeClass('f_select_on');
+                me.contentObjs.hide();//隐藏
+            });
+
+            //获取选中的数量
+            function getboxSum() {
+                var objs = me.contentObjs.find('input[type=checkbox]:checked');
+                var _length = objs.length;
+                me.contentObjs.find('span[class=checkedCount]').text(_length);
+                return _length;
+            };
+        })();
+        function getColumns() {
+            var _arr = [];
+            $.each(me.contentObjs.find('input[type=checkbox]:checked'), function (i, j) {
+                _arr.push({ column: j.value, text: $(j).attr('text'), unit: $(j).attr('unit'), tofixed: $(j).attr('tofixed') });
+            });
+            me.arr = _arr;
+        }
+        getColumns();
+    }
+    $.HiddenColumns = {
+        textIDs: [],
+        contentIDs: [],
+        //初始化 contentObjs 容器(jQuery) 
+        //columns数组(可分行)[{title:'基本指标',indexs:[{column:'',text:1, unit:'',isCheck:true},{column:'',text:1, unit:'',isCheck:true}]},{title:'基本指标',indexs:[{column:'',text:1,isCheck:true},{column:'',text:1}]}]
+        //configure
+        init: function (textObj, contentObjs, columns, callback, configure) {
+            this.textIDs.push(textObj);
+            this.contentIDs.push(contentObjs);
+            return new mjIndex(textObj, contentObjs, columns, callback, configure);
+        }
+    };
+    //DIV 模拟select
+    //var paramter = { textObj: '显示文本的DIV', contentObj: '内容DIV', data: '数据源', text: '赋值DIV前面所加文字 如：“排序:建筑用地面”'
+    //, textColumn: '文本列', valueColumn: 'value列',selected:'默认选中值', callback: '回调方法' }
+    function mjImitateSelect(paramter) {
+        var me = this;
+        me.textObj = paramter.textObj;
+        me.contentObj = paramter.contentObj;
+        me.data = paramter.data;
+        me.text = paramter.text;
+        me.textColumn = paramter.textColumn;
+        me.valueColumn = paramter.valueColumn;
+        me.selected = paramter.selected;
+        me.callback = paramter.callback;
+
+        var to = typeof (me.textObj) == 'string' ? $('#' + me.textObj) : me.textObj;
+        var co = typeof (me.contentObj) == 'string' ? $('#' + me.contentObj) : me.contentObj;
+
+
+        var _index = 0;
+        (function (_co) {
+            _co.html('');
+            $.each(me.data, function (i, j) {
+                var value = (typeof (j) == 'string' ? j : j[me.valueColumn]),
+                    text = (typeof (j) == 'string' ? j : j[me.textColumn]);
+                if (j.isChecked || me.selected == value) _index = i;
+                _co.append('<a href="javascript:" class="f_optionbox clearfix" tvalue="' + value + '">' + text + '</a>');
+            });
+        })(co);
+        //event
+        (function (_co, _to) {
+            _to.unbind('click').click(function () {
+                if (_co.is(':visible')) {
+                    _co.hide();
+                    _to.removeClass('f_select_on');
+                } else {
+                    _co.fadeIn('normal');
+                    _to.addClass('f_select_on');
+                }
+            });
+            _co.find('a').unbind('click').click(function () {
+                var temp = $(this);
+                if (temp.hasClass('on')) return;
+
+                _co.find('a').removeClass('on');
+                temp.addClass('on');
+
+                var v = temp.attr('tvalue'),
+                    t = temp.text();
+
+
+                me.oldvalue = me.value || '';
+                me.value = v;
+
+                var f = typeof (_to.find('span')) == 'undefined' ? _to : _to.find('span');
+                f.text((typeof me.text == 'undefined' || me.text == '') ? t : me.text + '：' + t);
+                _co.hide();
+                _to.removeClass('f_select_on');
+                if (typeof me.callback == 'function') me.callback({ value: v, text: t });
+            });
+            _co.children().eq(_index).click();
+        })(co, to);
+
+        $.documentClick(to, co);
+
+
+        if (typeof mjImitateSelect._init == 'undefined') {
+            //选中/获取
+            mjImitateSelect.prototype.val = function () {
+                var me = this;
+                if (arguments[0]) {
+                    //设置值
+                    var items = this.contentObj.find('a[tvalue="' + arguments[0] + '"]');
+                    if (items.length > 0) {
+                        me.oldvalue = me.value || '';
+                        me.value = arguments[0];
+
+                        var item = items.eq(0);
+                        me.textObj.data('selectvalue', me.value).find('span').text(item.text());
+                        //设置选中
+                        this.contentObj.children().removeClass('on');
+                        item.addClass('on');
+                    }
+                }
+                else return this.value;
+            }
+        }
+
+        mjImitateSelect._init = true;
+    }
+    $.mjImitateSelect = function (paramter) { return new mjImitateSelect(paramter); }
+
+
+
+    function mjImitateSelect2(paramter) {
+        var me = this;
+        me.textObj = paramter.textObj;
+        me.contentObj = paramter.contentObj;
+        me.data = paramter.data;
+        me.text = paramter.text;
+        me.textColumn = paramter.textColumn;
+        me.valueColumn = paramter.valueColumn;
+        me.callback = paramter.callback;
+
+        var to = typeof (me.textObj) == 'string' ? $('#' + me.textObj) : me.textObj;
+        var co = typeof (me.contentObj) == 'string' ? $('#' + me.contentObj) : me.contentObj;
+
+
+        var _index = 0;
+        (function (_co) {
+            _co.html('<div class="icon_caret02" style="left: 8%;"></div>');
+            $.each(me.data, function (i, j) {
+                if (j.isChecked) _index = i;
+                _co.append('<a href="javascript:" class="f_optionbox clearfix" tvalue="' + (typeof (j) == 'string' ? j : j[me.valueColumn]) + '">' + (typeof (j) == 'string' ? j : j[me.textColumn]) + '</a>');
+            });
+        })(co);
+        //event 
+        (function (_co, _to) {
+            _to.unbind('click').click(function () {
+                _co.fadeIn('normal');
+                _to.addClass('f_select_on');
+            });
+            _co.find('a').unbind('click').click(function () {
+                var v = $(this).attr('tvalue');
+                var t = $(this).text();
+                var f = typeof (_to.find('span')) == 'undefined' ? _to : _to.find('span');
+                f.text((typeof me.text == 'undefined' || me.text == '') ? t : me.text + '：' + t);
+                _co.hide();
+                _to.removeClass('f_select_on');
+                me.callback({ value: v, text: t });
+            });
+            _co.find('a').eq(_index).click();
+        })(co, to);
+
+        $.documentClick(to, co);
+    }
+    $.mjImitateSelect2 = function (paramter) { return new mjImitateSelect2(paramter); }
+
+    //隐藏窗口  clickContainers：为点击DIV的ID对象结合  contentContainers：为当前点击展开内容DIV的ID集合
+    function HiddenWindow(clickContainers, contentContainers) {
+        this.clickContainers = clickContainers;
+        this.contentContainers = contentContainers;
+        if (typeof HiddenWindow._initialized == 'undefined') {
+            HiddenWindow.prototype.hide = function (obj) {
+                var _clickContainers = this.clickContainers;
+                var _contentContainers = this.contentContainers;
+                for (var i = 0; i < this.clickContainers.length; i++) {
+                    if (whetherChild(obj, $('#' + this.clickContainers[i]))) {
+                        _clickContainers = _clickContainers.remove({ value: _clickContainers[i] });
+                        _contentContainers = _contentContainers.remove({ value: _contentContainers[i] });
+                        break;
+                    }
+                }
+                var _t = $.map(_clickContainers, function (j) { return '#' + j }).join(',');
+                var _c = $.map(_contentContainers, function (j) { return '#' + j }).join(',');
+                $(_t).removeClass('f_select_on');
+                $(_c).hide();
+            }
+            HiddenWindow._initialized = true;
+        }
+    }
+    $.mjHiddenWindow = function (clickContainers, contentContainers) {
+        return new HiddenWindow(clickContainers, contentContainers);
+    }
+
+    //to 文本DIV  内容DIV
+    $.documentClick = function (to, co, callback) {
+        to = typeof to == 'string' ? $('#' + to) : to;
+        co = typeof co == 'string' ? $('#' + co) : co;
+        $(document).click(function (e) {
+            e = window.event || e;
+            var srcElement = e.srcElement || e.target;
+            if (!whetherChild(srcElement, to) && !whetherChild(srcElement, co)) {
+                co.hide();
+                to.removeClass('f_select_on');
+                if (typeof callback == 'function') callback(to);
+            }
+        });
+    }
+    /*判断srcElement是否为obj或为obj的子元素   转移到base.common.js中
+    function whetherChild(srcElement, obj) {
+        if (srcElement == obj[0]) return true;
+        else {
+            var childs = obj.children();
+            for (var i = 0; i < childs.length; i++) {
+                if (srcElement == childs[i]) return true;
+                else {
+        if (arguments.callee(srcElement, $(childs[i]))) return true;
+                }
+            }
+        }
+        return false;
+    }*/
+    function createInput(name, value) {
+        var input = document.createElement('input');
+        input.name = name;
+        input.value = value;
+        return input;
+    }
+    $.downExcel = function (excelhtml, exceltitle) {
+        //判断下载权限
+        $.ajax({
+            url: DomainName + '/Dictionaries/GetPermissionType/',
+            dataType: 'json',
+            type: 'post',
+            async: false,
+            success: function (data) {
+                if (data.ptype == "1") {
+                    var form = document.createElement('form');
+                    document.body.appendChild(form);
+                    form.target = '_blank';
+                    form.method = 'post';
+                    form.action = '/down/DownExcelByNPOI';
+                    try {
+                        form.appendChild(createInput('excelhtml', excelhtml));
+                        form.appendChild(createInput('exceltitle', exceltitle));
+                        form.submit();
+                        document.body.removeChild(form);
+                    } catch (e) {
+
+                        document.body.removeChild(form);
+                    }
+                }
+                else {
+                    messagePrompt('您是体验账号用户，未开放下载功能！');
+                }
+            },
+            error: function () {
+                messagePrompt('error');
+                return;
+            }
+        });
+
+    }
+    $.downExcelV2 = function (excelhtml, exceltitle) {
+        //判断下载权限
+        $.ajax({
+            url: DomainName+'/Dictionaries/GetPermissionType/',
+            dataType: 'json',
+            type: 'post',
+            async: false,
+            success: function (data) {
+                if (data.ptype == "1") {
+
+                    var form = document.createElement('form');
+                    document.body.appendChild(form);
+                    form.target = '_blank';
+                    form.method = 'post';
+                    form.action = '/down/DownExcel';
+                    try {
+                        form.appendChild(createInput('excelhtml', excelhtml));
+                        form.appendChild(createInput('exceltitle', exceltitle));
+                        form.submit();
+                        document.body.removeChild(form);
+                    } catch (e) {
+
+                        document.body.removeChild(form);
+                    }
+                }
+                else {
+                    messagePrompt('您是体验账号用户，未开放下载功能！');
+                }
+            },
+            error: function () {
+                messagePrompt('error');
+                return;
+            }
+        });
+
+    }
+    $.downExcelV3 = function (excelhtml, exceltitle) {
+        var form = document.createElement('form');
+        document.body.appendChild(form);
+        form.target = '_blank';
+        form.method = 'post';
+        form.action = DomainName+'/down/DownExcel';
+        try {
+            form.appendChild(createInput('excelhtml', excelhtml));
+            form.appendChild(createInput('exceltitle', exceltitle));
+            form.submit();
+            document.body.removeChild(form);
+        } catch (e) {
+            document.body.removeChild(form);
+        }
+    }
+    $.downWord = function (wordhtml, wordtitle) {
+        //判断下载权限
+        $.ajax({
+            url: DomainName+'/Dictionaries/GetPermissionType/',
+            dataType: 'json',
+            type: 'post',
+            async: false,
+            success: function (data) {
+                if (data.ptype == "1") {
+                    var form = document.createElement('form');
+                    document.body.appendChild(form);
+                    form.target = '_blank';
+                    form.method = 'post';
+                    form.action = DomainName+'/down/DownWord';
+                    try {
+                        form.appendChild(createInput('wordhtml', wordhtml));
+                        form.appendChild(createInput('wordtitle', wordtitle));
+                        form.submit();
+                        document.body.removeChild(form);
+                    } catch (e) {
+
+                        document.body.removeChild(form);
+                    }
+                }
+                else {
+                    messagePrompt('您是体验账号用户，未开放下载功能！');
+                }
+            },
+            error: function () {
+                messagePrompt('error');
+                return;
+            }
+        });
+
+    }
+    var checkSelectListCheckedMap = {};
+    $.checkSelectList = function (option) {
+        var defaultOption = $.extend({
+            container: '',//容器id
+            data: [],
+            callback: function (checked) { },
+            text: 'text',
+            value: 'value',
+            style: 'width: 150px; overflow: hidden; text-overflow:ellipsis; white-space: nowrap;'
+        }, option);
+        var $container = $(defaultOption.container);
+        var strHtml = ' <div class="form-input fg_w02 fl">\
+                            <div class="form_select clearfix">\
+                                <span class="sel_text fl" style="'+ defaultOption.style + '">\
+                                    <span style="vertical-align: middle;" class="form_select_text">请选择</span>\
+                                </span>\
+                                <em class="icon_caret01 fr"></em>\
+                            </div>\
+                            <!---------弹出下拉菜单--------->\
+                            <div class="optionbox" style="display:none;">\
+                                <div class="icon_caret02" style="left:3%;"></div>\
+                                <div style="height: 225px; overflow-y: auto; overflow-x: hidden;" class="option">' + (function () {
+                                    var _strHtml = '';
+                                    $.each(defaultOption.data, function (i, v) {
+                                        var chkedstr = v.isChecked === true ? ' checked="checked"' : '';
+                                        _strHtml += '\
+                                            <a class="f_optionbox clearfix" href="javascript:">\
+                                                <label class="sel_text fl" style="width:100%;">\
+                                                    <input style="margin-left:10px;" type="checkbox" class="form_check" value="' +
+                                                    v[defaultOption.value] + '" ' + chkedstr + ' data-text="' + v[defaultOption.text] + '">\
+                                                    <span style="vertical-align: middle;">'+ v[defaultOption.text] + '</span>\
+                                                </label>\
+                                            </a>';
+                                    });
+                                    return _strHtml;
+                                })() +
+                                '</div>\
+                                <div class="butbox" style=" background-color:#f5f6f7; text-align: center; line-height:24px; padding:6px 10px;">\
+                                    <span class="blue01" name="checkAll" style="cursor:pointer">全选</span> |\
+                                    <span class="blue01" name="unChecked" style="cursor:pointer">反选</span>\
+                                    <a href="javascript:" class="but_confirm">确定</a>\
+                                    <a href="javascript:" class="but_cancel ml10">取消</a>\
+                                </div>\
+                            </div>\
+                            <!---------弹出下拉菜单 end--------->\
+                        </div>';
+        $container.html(strHtml);
+
+        var $containerSel = $container.find('.form_select'),
+            $containerOption = $container.find('.optionbox');
+
+        //点击展开\收起下拉框
+        $containerSel.unbind('click').click(function () {
+            if ($containerOption.css('display') == 'none') {
+
+                //#region 还原选中的数据
+                var checkedValues = checkSelectListCheckedMap[defaultOption.container.replace('#', '')] || '';
+                $containerOption.find('.option a input[type="checkbox"]').prop('checked', false);
+                $.each(checkedValues.split(','), function (i, v) {
+                    $containerOption.find('.option a input[type="checkbox"][value="' + v + '"]').prop('checked', true);
+                });
+                //#endregion
+
+                $containerOption.show();
+                $containerSel.addClass('f_select_on');
+            }
+            else {
+                $containerOption.hide();
+                $containerSel.removeClass('f_select_on');
+            }
+        });
+
+        //全选
+        $containerOption.find('.butbox span[name="checkAll"]').unbind('click').click(function () {
+            $containerOption.find('.option a input[type="checkbox"]').prop('checked', true);
+        });
+
+        //反选
+        $containerOption.find('.butbox span[name="unChecked"]').unbind('click').click(function () {
+            $containerOption.find('.option a input[type="checkbox"]').each(function () {
+                $(this).prop('checked', !$(this).prop('checked'));
+            });
+        });
+
+        function setSelectChecked() {
+            var checkedArr = [],
+               checkedTextArr = [];
+            $containerOption.find('.option a input[type="checkbox"]:checked').each(function () {
+                checkedArr.push($(this).val());
+                checkedTextArr.push($(this).attr('data-text'));
+            });
+            var text = checkedTextArr.length ? checkedTextArr.join(',') : '';
+            if (defaultOption.title)
+                text = defaultOption.title + ':' + text;
+            $containerSel.find('.form_select_text').text(text).attr('title', text);
+
+            //保存已选中的项
+            checkSelectListCheckedMap[defaultOption.container.replace('#', '')] = checkedArr.join(',');
+            return checkedArr;
+        }
+
+        //确定
+        $containerOption.find('.butbox a.but_confirm').unbind('click').click(function () {
+            checkedArr = setSelectChecked();
+            //回调
+            if (typeof defaultOption.callback == 'function') {
+                defaultOption.callback(checkedArr.join(','));
+            }
+
+            $containerSel.click();
+        });
+
+        //取消
+        $containerOption.find('.butbox a.but_cancel').unbind('click').click(function () {
+            $containerSel.click();
+        });
+
+        setSelectChecked();
+        $.documentClick($containerSel, $containerOption);
+    }
+})(jQuery);
+
+
+
+var OverflowTable = {
+    getBrowser: function () {
+        var Sys = {}, s;
+        var ua = navigator.userAgent.toLowerCase();
+        if (s = ua.match(/msie ([\d.]+)/)) Sys.ie = s[1];
+        return Sys;
+    },
+    //x轴滑动
+    x: function (contentID, width, fixColumnNumber) {
+        var Sys = OverflowTable.getBrowser();
+        if (Sys.ie) {
+            if (parseFloat(Sys.ie) <= 8) {
+                var _theigth = $("#" + contentID + " table").height();
+
+                $('#' + contentID).css({ overflow: 'auto', height: _theigth + 17 });
+                return;
+            }
+        }
+        //$('#' + contentID + ' td').attr('nowrap', 'nowrap');
+        if (($("#" + contentID).width()) >= ($("#" + contentID + " table").width())) {
+            $('#' + contentID).css('height', $("#" + contentID + " table").height());
+            return;
+        }
+        var contentHtml = $('#' + contentID).html();
+        var contentStr = string.format("<div id='{0}Column' style='margin:0;'>{1}</div><div id='{0}Data' style='margin:0;'>{1}</div>", contentID, contentHtml);
+        $('#' + contentID).html(contentStr);
+        var ids = { Fix: contentID + 'Fix', Head: contentID + 'Head', Column: contentID + 'Column', Data: contentID + 'Data' };
+        $('#' + ids.Column + ' td,#' + ids.Data + ' td,#' + ids.Column + ' th,#' + ids.Data + ' th').attr('nowrap', 'nowrap');
+        var ColumnsWidth = 0;
+        var ColumnsNumber = 0;
+
+        var lastTr = null;
+        var _trs = $("#" + ids.Column + " tr");
+        for (var i = _trs.length - 1; i >= 0; i--) {
+            if (_trs[i].style.display != 'none') {
+                lastTr = _trs[i];
+                break;
+            }
+        }
+
+        $(lastTr).find('td:lt(' + fixColumnNumber + ')').each(function () {
+            ColumnsWidth += $(this).outerWidth(true);
+            ColumnsNumber++;
+        });
+
+        ColumnsWidth += 2;
+        if ($.browser && $.browser.msie) {
+            switch ($.browser.version) {
+                case "7.0": if (ColumnsNumber >= 3) ColumnsWidth--;
+                    break;
+                case "8.0": if (ColumnsNumber >= 2) ColumnsWidth--;
+                    break;
+            }
+        }
+
+        $("#" + ids.Column).css("width", ColumnsWidth);
+        $("#" + ids.Data).scroll(function () {
+            $("#" + ids.Column).scrollTop($("#" + ids.Data).scrollTop());
+        });
+        $("#" + ids.Column).css({ "overflow": "hidden", "position": "relative", "z-index": "80", "background-color": "#FFFFFF" });
+        $("#" + ids.Data).css({ "overflow-x": "auto", "overflow-y": "hidden", "width": width, "position": "relative", "z-index": "75" });
+
+        $("#" + ids.Column).offset($("#" + contentID).offset());
+        $("#" + ids.Data).offset($("#" + contentID).offset());
+
+        $('#' + contentID).css('height', $("#" + ids.Column).height() + 17);
+    },
+    y: function (contentID, height, isaotu) {
+        if (height > $("#" + contentID + " table").height() && isaotu != 'false') {
+            $("#" + contentID).css('height', $("#" + contentID + " table").height());
+            return;
+        }
+        else {
+            $("#" + contentID).css('height', height);
+        }
+        var contentHtml = $('#' + contentID).html();
+        var contentStr = string.format("<div id='{0}Head' style='margin:0;'>{1}</div><div id='{0}Data' style='margin:0;'>{1}</div>", contentID, contentHtml);
+        $('#' + contentID).html(contentStr);
+        var ids = { Fix: contentID + 'Fix', Head: contentID + 'Head', Column: contentID + 'Column', Data: contentID + 'Data' };
+        //$('#' + ids.Head + ' td,#' + ids.Data + ' td,#' + ids.Head + ' th,#' + ids.Data + ' th').attr('nowrap', 'nowrap');
+        var HeadHeight = $("#" + ids.Head + " table thead").height();
+        HeadHeight += 2;
+        $("#" + ids.Head).css("height", HeadHeight);
+        $("#" + ids.Fix).css("height", HeadHeight);
+        $("#" + ids.Data).scroll(function () {
+            $("#" + ids.Head).scrollLeft($("#" + ids.Data).scrollLeft());
+        });
+        $("#" + ids.Head).css({ "overflow": "hidden", "width": $("#" + ids.Data).width() - 17, "position": "relative", "z-index": "85", "background-color": "#FFFFFF" });
+        $("#" + ids.Data).css({ "overflow-y": "scroll", "overflow-x": "hidden", "width": $("#" + ids.Data).width(), "height": height, "position": "relative", "z-index": "75" });
+        $("#" + ids.Head).offset($("#" + contentID).offset());
+        $("#" + ids.Data).offset($("#" + contentID).offset());
+    },
+    xy: function (contentID, width, height, fixColumnNumber, isaotu) {
+        if (height < 500)
+            height = height + 17;
+        //#region  解决ie9下运算结果不正确的问题
+        var tempData1 = $("#" + contentID).width();
+        var tempData2 = $("#" + contentID + " table").width();
+        var flag = (tempData1 >= tempData2);
+        //#endregion
+        if (flag) {
+            OverflowTable.y(contentID, height, isaotu);
+            return;
+        }
+        var tempData3 = $("#" + contentID + " table").height();
+        flag = (height >= tempData3);
+        if (flag && isaotu != 'false') {
+            OverflowTable.x(contentID, width, fixColumnNumber);
+            return;
+        }
+        var Sys = OverflowTable.getBrowser();
+        if (Sys.ie) {
+            if (parseFloat(Sys.ie) <= 8) {
+                var _theigth = $("#" + contentID + " table").height();
+                $('#' + contentID).css({ 'height': _theigth > height ? height : _theigth, overflow: 'auto', width: width });
+                return;
+            }
+        }
+        $('#' + contentID).css('height', height);
+
+        $('#' + contentID + ' th').attr('nowrap', 'nowrap');
+        //#region 设置td不换行 2016-07-14 By MJB
+        /*-------------------------------------------------------
+        *不要直接使用$('#contentID td').attr('nowrap', 'nowrap')，
+        *当tr和td都足够多的时候，会导致谷歌浏览器堆栈溢出
+        ---------------------------------------------------------*/
+        var $trArr = $('#' + contentID + ' tr');
+        $trArr.each(function () {
+            $(this).find('td').attr('nowrap', 'nowrap');//分别设置每一行的TD不换行属性
+        });
+        //#endregion
+        var contentHtml = $('#' + contentID).html();
+
+        $('#' + contentID).html('<div id="' + contentID + 'Fix" >' + contentHtml + '</div>');
+        $('#' + contentID).append('<div id="' + contentID + 'Head" style="margin:0;">' + contentHtml + '</div>');
+        $('#' + contentID).append('<div id="' + contentID + 'Column" style="margin:0;">' + contentHtml + '</div>');
+        $('#' + contentID).append('<div id="' + contentID + 'Data" style="margin:0;">' + contentHtml + '</div>');
+        contentHtml = "";
+
+        var ids = { Fix: contentID + 'Fix', Head: contentID + 'Head', Column: contentID + 'Column', Data: contentID + 'Data' };
+
+        //$('#' + ids.Fix + ' td,#' + ids.Head + ' td,#' + ids.Column + ' td,#' + ids.Data + ' td').attr('nowrap', 'nowrap');
+        //$('#' + ids.Fix + ' th,#' + ids.Head + ' th,#' + ids.Column + ' th,#' + ids.Data + ' th').attr('nowrap', 'nowrap');
+
+        var HeadHeight = $("#" + ids.Head + " table thead").height();
+        HeadHeight += 2;
+
+        $("#" + ids.Head).css("height", HeadHeight);
+        $("#" + ids.Fix).css("height", HeadHeight);
+        var ColumnsWidth = 0;
+        var ColumnsNumber = 0;
+
+        var lastTr = null;
+        var _trs = $("#" + ids.Column + " tr");
+        for (var i = _trs.length - 1; i >= 0; i--) {
+            if (_trs[i].style.display != 'none') {
+                lastTr = _trs[i];
+                break;
+            }
+        }
+
+        $(lastTr).find('td:lt(' + fixColumnNumber + ')').each(function () {
+            ColumnsWidth += $(this).outerWidth(true);
+            ColumnsNumber++;
+        });
+
+        ColumnsWidth += 2;
+        if ($.browser && $.browser.msie) {
+            switch ($.browser.version) {
+                case "7.0": if (ColumnsNumber >= 3) ColumnsWidth--;
+                    break;
+                case "8.0": if (ColumnsNumber >= 2) ColumnsWidth--;
+                    break;
+            }
+        }
+        $("#" + ids.Column).css("width", ColumnsWidth);
+        $("#" + ids.Fix).css("width", ColumnsWidth);
+        $("#" + ids.Data).scroll(function () {
+            $("#" + ids.Head).scrollLeft($("#" + ids.Data).scrollLeft());
+            $("#" + ids.Column).scrollTop($("#" + ids.Data).scrollTop());
+        });
+
+        $("#" + ids.Fix).css({ "overflow": "hidden", "position": "relative", "z-index": "90", "background-color": "#FFFFFF" });
+        $("#" + ids.Head).css({ "overflow": "hidden", "width": width, "position": "relative", "z-index": "85", "background-color": "#FFFFFF" });
+        $("#" + ids.Column).css({ "overflow": "hidden", "height": height - 17, "position": "relative", "z-index": "80", "background-color": "#FFFFFF" });
+        $("#" + ids.Data).css({ "overflow": "scroll", "width": width, "height": height, "position": "relative", "z-index": "75" });
+        $("#" + ids.Head).css('width', $("#" + ids.Head).width() - 17);//with 可能是百分比，不能直接减17
+
+        if ($("#" + ids.Head).width() > $("#" + ids.Fix + " table").width()) {
+            $("#" + ids.Head).css("width", $("#" + ids.Fix + " table").width());
+            $("#" + ids.Data).css("width", $("#" + ids.Fix + " table").width() + 17);
+        }
+        if ($("#" + ids.Column).height() > $("#" + ids.Column + " table").height()) {
+            $("#" + ids.Column).css("height", $("#" + ids.Column + " table").height());
+            $("#" + ids.Data).css("height", $("#" + ids.Column + " table").height() + 17);
+        }
+
+        var offset = $("#" + contentID).offset();
+        $("#" + ids.Fix).offset(offset);
+        $("#" + ids.Head).offset(offset);
+        $("#" + ids.Column).offset(offset);
+        $("#" + ids.Data).offset(offset);
+    }
+}

@@ -1,0 +1,730 @@
+.g-container {
+	z-index: 0;
+	font-family: "Helvetica Neue", Helvetica, "Microsoft YaHei", Arial;
+	-webkit-font-smoothing: antialiased;
+	overflow: hidden;
+	cursor: -webkit-grab;
+	cursor: -moz-grab;
+	position: relative;
+	-ms-touch-action: none;
+	text-align: left;
+}
+
+.g-dragging,
+.g-dragging .g-container  {
+	cursor: url('./images/grabbing.cur'), move;
+	cursor: -webkit-grabbing;
+	cursor: -moz-grabbing;
+}
+
+.g-clickable,
+.g-clickable .g-container  {
+	cursor: pointer;
+}
+
+.g-focus,
+.g-focus .g-container {
+	cursor: default;
+}
+
+.g-edit,
+.g-edit .g-container {
+	cursor: crosshair;
+}
+
+.g-map-frame,
+.g-layers-frame,
+.g-mask-frame,
+.g-tile,
+.g-tile-container,
+.g-label,
+.g-label-container,
+.g-graphic-container,
+.g-html,
+.g-html-container,
+.g-image,
+.g-image-container,
+.g-zoom-box,
+.g-layer,
+.g-vml,
+.g-compass,
+.g-spark,
+.g-popup {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.g-panel-frame{
+	z-index: 10000000;
+}
+
+.g-compass{
+	left: auto;
+	right: 0;
+	width: 64px;
+	height: 64px;
+	background-image: url('./images/compass.png');
+	background-repeat: no-repeat;
+	background-size: 100%;
+	-moz-background-size: 100%;
+	opacity: 0;
+	filter: alpha(opacity=0);
+	cursor: pointer;
+}
+
+.retina .g-compass{
+	background-image: url('./images/compass@2x.png');
+	background-size: 100%;
+	-moz-background-size: 100%;
+}
+
+.ielt9 .g-compass{
+	z-index: 10000000;
+	background: none;
+	src: '../../dist/lib/images/compass.png'; /* 注意，该值用于IE7/8，图片为相对HTML页面的路径，与一般CSS值不同 */
+}
+
+.g-spark{
+	opacity: 0;
+	pointer-events: none;
+	width: 48px;
+	height: 48px;
+	border-radius: 100%;
+	-moz-border-radius: 100%;
+	-webkit-border-radius: 100%;
+	-o-border-radius: 100%;
+	background: -webkit-radial-gradient(24px circle,rgba(255,255,255,0.7),rgba(255,255,255,0));
+	background: -moz-radial-gradient(24px circle,rgba(255,255,255,0.7),rgba(255,255,255,0));
+	background: -o-radial-gradient(24px circle,rgba(255,255,255,0.7),rgba(255,255,255,0));
+	background: radial-gradient(24px circle,rgba(255,255,255,0.7),rgba(255,255,255,0));
+}
+
+.g-popup{
+	min-width: 100px;
+	z-index: 1000000;
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	-moz-transition: opacity 0.2s linear;
+	-o-transition: opacity 0.2s linear;
+	transition: opacity 0.2s linear;
+}
+
+.g-popup-wrapper{
+	-moz-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.24);
+	-webkit-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.24);
+	-o-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.24);
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.24);
+	border-radius: 7px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	-o-border-radius: 7px;
+	background-color: #fff;
+	color: #000;
+}
+
+.g-popup-close{
+	position: absolute;
+	background: #fff url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+PHN2ZyB3aWR0aD0iOHB4IiBoZWlnaHQ9IjZweCIgdmlld0JveD0iMCAwIDggNiIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4gICAgICAgIDx0aXRsZT5TdHJva2UgMzwvdGl0bGU+ICAgIDxkZXNjPkNyZWF0ZWQgd2l0aCBTa2V0Y2guPC9kZXNjPiAgICA8ZGVmcz48L2RlZnM+ICAgIDxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+ICAgICAgICA8cGF0aCBkPSJNMSwwIEw3LDYgTTcsMCBMMSw2IiBpZD0iU3Ryb2tlLTMiIHN0cm9rZT0iIzNBQTlFMyI+PC9wYXRoPiAgICA8L2c+PC9zdmc+) no-repeat center center;
+	border-radius: 50%;
+	right: -10px;
+	top: -12px;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.24);
+    cursor: pointer;
+}
+
+.g-popup-content{
+	font-size: 1.2em;
+	border: 2px solid #fff;
+	border-radius: 7px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	-o-border-radius: 7px;
+}
+
+.g-popup-content-wrapper{
+	padding: 12px 16px;
+	overflow: auto;
+	cursor: default;
+	font-size: 13px;
+}
+
+.g-popup-pointer{
+	position: absolute;
+	height: 0;
+    border-top: 16px solid #fff;
+    border-right: 24px solid transparent;
+    content: '';
+    z-index: 3;
+	left: 20px;
+}
+
+.g-brand img {
+	cursor: pointer;
+}
+
+.g-compass,
+.g-tile,
+.g-image,
+.g-popup,
+.g-brand,
+.g-control,
+.g-spark {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.g-compass,
+.g-tile,
+.g-image{
+	border: none;
+}
+
+.g-tile,
+.g-image {
+	visibility: hidden;
+}
+
+.g-tile-loaded,
+.g-image-loaded {
+	visibility: inherit;
+}
+
+.g-zoom-anim .g-tile,
+.g-pan-anim .g-tile,
+.g-rotate-anim .g-tile,
+.g-zoom-anim .g-label,
+.g-pan-anim .g-label,
+.g-rotate-anim .g-label {
+	-webkit-transition: none;
+	-moz-transition: none;
+	-o-transition: none;
+	transition: none;
+}
+
+.g-zoom-anim .g-zoom-hide {
+	visibility: hidden;
+}
+
+.g-zoom-box {
+	width: 0;
+	height: 0;
+	background: black;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+	z-index: 100000;
+}
+.g-zoom-box-left {
+	border-right: 2px dotted #f00;
+}
+.g-zoom-box-right {
+	border-left: 2px dotted #f00;
+}
+.g-zoom-box-top {
+	border-bottom: 2px dotted #f00;
+}
+.g-zoom-box-bottom {
+	border-top: 2px dotted #f00;
+}
+
+.g-vml-container {
+	position: absolute;
+}
+
+.g-vml {
+	behavior: url(#default#VML);
+	display: inline-block;
+}
+
+.g-webgl-error-message {
+	font-size: 16px;
+	font-weight: normal;
+	text-align: center;
+	background: #fff;
+	color: #000;
+	padding: 1.5em;
+	width: 400px;
+	margin: 5em auto 0;
+}
+
+.g-utf-board{
+    position: absolute;
+    padding: 10px 12px;
+    background: #fff;
+    border-radius: 4px;
+	border: 1px solid #ddd;
+	font-size: 13px;
+	overflow: hidden;
+	white-space: nowrap;
+	color: #111;
+}
+
+.g-utf-board > div,
+.g-popup-content-wrapper > div {
+	height: 20px;
+	line-height: 20px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.g-utf-board-key {
+	color: #777;
+}
+
+.g-switch {
+    width: 30px;
+    height: 14px;
+    line-height: 14px;
+    border-radius: 7px;
+    background: #fff;
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.g-switch-button {
+    position: absolute;
+    margin: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    z-index: 2;
+    -webkit-transition: right 0.2s linear;
+	-moz-transition: right 0.2s linear;
+	-o-transition: right 0.2s linear;
+    transition: right .3s;
+}
+
+.g-switch.g-switch-on {
+	background: #20a0ff;
+}
+
+.g-switch.g-switch-on .g-switch-button{
+	right: 0;
+}
+
+.g-switch.g-switch-off {
+	background: #ccc;
+}
+
+.g-switch.g-switch-off .g-switch-button {
+	right: 16px;
+}
+
+.g-pos-top-left {
+	position: absolute;
+	height: 0;
+	top: 0;
+	left: 0;
+}
+
+.g-pos-top-right {
+	position: absolute;
+	height: 0;
+	top: 0;
+	right: 0;
+}
+
+.g-pos-bottom-left {
+	position: absolute;
+	height: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.g-pos-bottom-right {
+	position: absolute;
+	height: 0;
+	bottom: 0;
+	right: 0;
+}
+
+.g-pos-bottom-left > * {
+	position: absolute;
+	bottom: 0;
+}
+
+.g-pos-bottom-right > * {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+
+.g-pos-bottom {
+	position: absolute;
+	width: 100%;
+	height: 0;
+	bottom: 0;
+}
+
+.g-control {
+	position: absolute;
+}
+
+.g-control-zoom,
+.g-control-geolocation,
+.g-control-navigation {
+	float: left;
+	/*position: absolute;*/
+}
+
+.g-control-zoom,
+.g-control-geolocation {
+	margin: 10px;
+	border-radius: 4px;
+	border: 1px solid #ddd;
+    overflow: hidden;
+    background: #fff;
+}
+
+.g-control-zoom-button,
+.g-control-geolocation-button {
+	padding: 8px;
+	background: #fff;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.g-control-zoom-button:first-child {
+	border-bottom: 1px solid #ddd;
+}
+
+.g-control-zoom-button:hover,
+.g-control-geolocation-button:hover {
+	background: #eee;
+}
+
+.g-icon-zoom-in,
+.g-icon-zoom-out,
+.g-icon-geolocation {
+	width: 14px;
+	height: 14px;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	-moz-background-size: 100%;
+}
+
+.g-icon-zoom-in {
+	background-image: url('./images/zoom-in.png');
+}
+
+.retina .g-icon-zoom-in {
+	background-image: url('./images/zoom-in@2x.png');
+}
+
+.g-icon-zoom-out {
+	background-image: url('./images/zoom-out.png');
+}
+
+.retina .g-icon-zoom-out {
+	background-image: url('./images/zoom-out@2x.png');
+}
+
+.g-icon-geolocation {
+	background-image: url('./images/geolocation.png');
+}
+
+.retina .g-icon-geolocation {
+	background-image: url('./images/geolocation@2x.png');
+}
+
+.g-control-timeline {
+	position: absolute;
+	height: 40px;
+	width: 40%;
+	min-width: 200px;
+	left: 50%;
+	-moz-transform: translate(-50%, 0);
+	-webkit-transform: translate(-50%, 0);
+	-o-transform: translate(-50%, 0);
+	-ms-transform: translate(-50%, 0);
+	transform: translate(-50%, 0);
+	bottom: 10px;
+	border-radius: 4px;
+	border: 1px solid #ddd;
+    background: #fff;
+    cursor: auto;
+}
+
+.g-control-timeline-runway {
+	position: absolute;
+	left: 60px;
+	right: 50px;
+	top: 18px;
+	height: 6px;
+	border-radius: 3px;
+	background: #e4e8f1;
+	cursor: pointer;
+}
+
+.g-control-timeline-bar {
+	width: 0px;
+	height: 100%;
+	border-radius: 3px;
+	background: #20a0ff;
+}
+
+.g-control-timeline-button-wrapper {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	top: -18px;
+	margin-left: -18px;
+}
+
+.g-control-timeline-button {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	margin-top: -10px;
+	margin-left: -10px;
+	border-radius: 50%;
+	background: #20a0ff;
+}
+
+.g-control-timeline-button:hover {
+	width: 22px;
+	height: 22px;
+	margin-top: -11px;
+	margin-left: -11px;
+}
+
+.g-control-timeline-tooltip {
+	position: absolute;
+	bottom: 38px;
+	left: 50%;
+	-moz-transform: translate(-50%, 0);
+	-webkit-transform:translate(-50%, 0);
+	-o-transform:translate(-50%, 0);
+	-ms-transform:translate(-50%, 0);
+	transform:translate(-50%, 0);
+	background: #1f2d3d;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.g-control-timeline-tooltip-arrow {
+	position: absolute;
+	bottom: -5px;
+	left: 50%;
+	margin-left: -5px;
+	border: 5px solid #1f2d3d;
+	border-bottom-width: 0;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+}
+
+.g-control-timeline-play {
+	width: 40px;
+	height: 40px;
+	padding: 8px;
+	margin-left: 10px;
+}
+
+.g-icon-play,
+.g-icon-pause {
+	width: 24px;
+	height: 24px;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	-moz-background-size: 100%;
+	cursor: pointer;
+}
+
+.g-icon-play {
+	background-image: url('./images/play.png');
+}
+
+.retina .g-icon-play {
+	background-image: url('./images/play@2x.png');
+}
+
+.g-icon-pause {
+	background-image: url('./images/pause.png');
+}
+
+.retina .g-icon-pause {
+	background-image: url('./images/pause@2x.png');
+}
+
+.g-control-timeline-label {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 40px;
+	height: 40px;
+	line-height: 40px;
+	text-align: center;
+	font-size: 14px;
+	color: #000;
+}
+
+.g-control-layers {
+	background: #fff;
+	margin: 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 5px 0;
+	cursor: auto;
+}
+
+.g-control-layers ul,
+.g-control-layers li {
+	list-style: none;
+	display: block;
+	padding: 0;
+	margin: 0;
+}
+
+.g-control-layers-list {
+	width: 100%;
+	overflow: hidden;
+}
+
+.g-control-layers-item {
+	height: 20px;
+	line-height: 20px;
+	font-size: 0;
+	padding: 0 16px !important;
+	position: relative;
+	white-space: nowrap;
+}
+
+.g-control-layers-name {
+	height: 20px;
+	max-width: 200px;
+	font-size: 12px;
+	vertical-align: middle;
+	line-height: 20px;
+	padding-left: 12px;
+	display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.g-legend ul,
+.g-legend li {
+	list-style: none;
+	display: block;
+	padding: 0;
+	margin: 0;
+}
+
+.g-legend .g-legend-wrapper {
+	margin: 10px;
+	position: absolute;
+    bottom: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.g-legend .g-legend-button {
+	width: 30px;
+	text-align: center;
+	padding: 4px 5px;
+	background: #fff;
+	font-weight: bold;
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.g-legend .g-legend-container {
+	max-width: 200px;
+	max-height: 300px;
+	overflow: scroll;
+	overflow-x: hidden;
+    background: #fff;
+    padding: 10px 27px 10px 10px;
+    margin-right: -17px;
+    margin-bottom: -5px;
+}
+
+.g-legend .g-legend-layer {
+	margin-bottom: 12px;
+}
+
+.g-legend .g-legend-layer:last-child {
+	margin-bottom: 0;
+}
+
+.g-legend-title {
+	font-weight: bold;
+	font-size: 12px;
+	height: 20px;
+	line-height: 20px;
+	margin: 0 0 5px;
+	white-space: nowrap;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.g-legend .g-legend-list {
+	display: block;
+	padding-left: 5px;
+}
+
+.g-legend .g-legend-list-item {
+	display: block;
+	margin: 4px 0;
+	font-size: 0;
+	min-height: 20px;
+	line-height: 20px;
+	white-space: nowrap;
+}
+
+.g-legend-icon-wrapper {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align: center;
+}
+
+.g-legend-icon {
+	display: block;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	border-style: solid;
+	-moz-box-shadow: 0 2px 5px 0 rgba(0,0,0,.24);
+	-webkit-box-shadow: 0 2px 5px 0 rgba(0,0,0,.24);
+	-o-box-shadow: 0 2px 5px 0 rgba(0,0,0,.24);
+	box-shadow: 0 2px 5px 0 rgba(0,0,0,.24);
+}
+
+.g-legend-icon-point,
+.g-legend-icon-marker {
+	border-radius: 50%;
+}
+
+.g-legend-icon-polyline {
+	margin-top: -2px !important;
+	height: 4px !important;
+}
+
+.g-legend-icon-polygon {}
+
+.g-legend-name {
+	max-width: 100%;
+	display: inline-block;
+	font-size: 12px;
+	padding-left: 10px;
+	vertical-align: middle;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

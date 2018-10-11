@@ -1,0 +1,781 @@
+/*
+ * 地图方法取
+ */
+/**
+ * 人口规模板块图
+ */
+function getSizeMapData(requestObj) {
+	var data = JSON.stringify(requestObj);
+	//加载数据前，添加loading
+	if (!$('.grid-box .btn-switch').hasClass('is-checked')) {
+		$("#map").overlay();
+	}
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/map/getPopulationSizeInfoMap',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			isFinish = true;
+			if (jsonData.dataList == 0) { //处理成都的没数据问题
+				gMap.removeDataViz();
+				//网格打开的话由网格关闭
+				if (!$('.grid-box .btn-switch').hasClass('is-checked')) {
+					$("#map").unOverlay();
+				}
+				return;
+			}
+			console.log(jsonData)
+			mapData = jsonData;
+			polygonMapUid = jsonData.geoheyResponBodyData.dataUid;
+			polygonMapObj = $("#populationSize").GetCityMapControl("mapVisualization").getLayer('polygonEffect');
+
+			//人口规模-数据选择
+			var parameter = {};
+			parameter = $.extend(true, {}, $('#peopleIndex').getParameter());
+			//封装地图参数指标对象
+			var typeObj = {};
+			typeObj.data = mapData.dataList;
+			typeObj.types = cityMapControlType;
+			var fieldName;
+			if (polygonMapObj.callbackData.colorLegend == null) { //第一次初始化
+				fieldName = $("#app_target").val()
+			} else {
+				fieldName = polygonMapObj.callbackData.vizConfig.fieldName;
+				if (!['liveDensity', 'livePeopleCount', 'employmentRatio', 'workDensity', 'workPeopleCount'].includes(fieldName)) {
+					fieldName = $("#app_target").val()
+				}
+				if (parameter.peopleIndex == 2) { //处理切换保持指标选择正确
+					switch (fieldName) {
+						case 'liveDensity':
+							fieldName = "workDensity";
+							break
+						case 'livePeopleCount':
+							fieldName = "workPeopleCount";
+							break
+						case 'employmentRatio':
+							fieldName = "employmentRatio";
+							break
+					};
+				}
+				if (parameter.peopleIndex == 1) {
+					switch (fieldName) {
+						case 'workDensity':
+							fieldName = "liveDensity";
+							break
+						case 'workPeopleCount':
+							fieldName = "livePeopleCount";
+							break
+						case 'employmentRatio':
+							fieldName = "employmentRatio";
+							break
+					};
+				}
+			};
+			typeObj.fieldName = fieldName;
+			polygonMapObj.set(typeObj);
+			//加载完数据，去掉loading
+			if (!$('.grid-box .btn-switch').hasClass('is-checked')) {
+				$("#map").unOverlay();
+			}
+		},
+		error: function (errorResult) {
+			if (!$('.grid-box .btn-switch').hasClass('is-checked')) {
+				$("#map").unOverlay();
+			}
+		}
+	});
+
+};
+
+//职住迁徙板块图
+function getMapDataStru(requestObj) {
+	var data = JSON.stringify(requestObj);
+	//加载数据前，添加loading
+	$("#map").overlay();
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/map/getPopulationStructureInfoMap',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			mapData = jsonData.data;
+			/*if(requestObj.cityId=="e83875a9-79cb-40c6-9508-df6fd2ac31a3"){//处理成都的没数据问题
+				gMap.removeDataViz();
+				$("#map").unOverlay();
+				return;
+			}*/
+			if (!mapData.liveMoveList) {
+				isFinish = true
+				return
+			}
+			polygonMapUid = jsonData.geoheyResponBodyData.dataUid;
+			polygonMapObj = $("#populationSize").GetCityMapControl("mapVisualization").getLayer('polygonEffect');
+			//polygonMapObj.set(mapData);
+			var typeObj = {};
+			var value = $.extend(true, {}, $('#studyType').getParameter()).studyType;
+			if (value == "work") {
+				typeObj.data = mapData.liveMoveList;
+			} else {
+				typeObj.data = mapData.liveWorkList;
+			};
+			if (value == "work") {
+				typeObj.types = [{
+					"value": 'indexValue',
+					"text": "居住地分布(人数)",
+					isNumber: true
+				}];
+				var selected = 'indexValue';
+				typeObj.selected = selected;
+				polygonMapObj.set(typeObj);
+				polygonMapObj.set(mapData.liveMoveList);
+			}
+			if (value == "home") {
+				typeObj.types = [{
+					"value": 'indexValue',
+					"text": "工作地分布(人数)",
+					isNumber: true
+				}];
+				var selected = 'indexValue';
+				typeObj.selected = selected;
+				polygonMapObj.set(typeObj);
+				polygonMapObj.set(mapData.liveWorkList);
+			}
+			//加载完数据，去掉loading
+			$("#map").unOverlay();
+		},
+		error: function (errorResult) {
+			$("#map").unOverlay()
+		}
+	})
+
+}
+
+//职住迁徙od图
+function getOdMapData(requestObj) {
+	var data = JSON.stringify(requestObj);
+	//$("#map").overlay();
+	$.request({
+		url: contextPath + '/dataanalysis/people/1/map/getPopulationMigrationInfoMap',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			mapData = jsonData.data;
+			isFinish = true;
+			/*if(requestObj.cityId=="e83875a9-79cb-40c6-9508-df6fd2ac31a3"){//处理成都的没数据问题
+				gMap.removeDataViz();
+				$("#map").unOverlay();
+				return;
+			}*/
+			var typeObj = {};
+			//传入od数据
+			odobj = $("#populationSize").GetCityMapControl("mapVisualization").getLayer('odControl');
+			if (odobj) {
+				var value = $.extend(true, {}, $('#studyType').getParameter()).studyType;
+				if (value == "work") {
+					typeObj.types = [{
+						"value": 'indexValue',
+						"text": "居住分布(人数)",
+						isNumber: true
+					}];
+					var selected = 'indexValue';
+					typeObj.selected = selected;
+					odobj.set(typeObj);
+					tar = [mapData.targetLongitude, mapData.targetLatitude];
+					loc = mapData.resourceList;
+					odData = mapData.indexValue;
+					odobj.set(odData);
+				}
+				if (value == "home") {
+					typeObj.types = [{
+						"value": 'indexValue',
+						"text": "工作地分布(人数)",
+						isNumber: true
+					}];
+					var selected = 'indexValue';
+					typeObj.selected = selected;
+					odobj.set(typeObj);
+					tar = [mapData.targetLongitude, mapData.targetLatitude];
+					loc = mapData.resourceList;
+					odData = mapData.indexValue;
+					odobj.set(odData);
+
+				}
+			}
+
+
+		},
+		error: function (errorResult) {
+			$("#map").unOverlay();
+		}
+	})
+}
+
+//人口规模热力图
+function getHeart(requestObj) {
+	var data = JSON.stringify(requestObj);
+	$("#map").overlay();
+	$.request({
+		url: contextPath + '/dataanalysis/people/1/map/getPopulationSizeHeartMap',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			$("#map").unOverlay();
+			mapData = jsonData.data;
+			pointMapUid = jsonData.geoheyResponBodyData.dataUid;
+			pointMapObj = $("#populationSize").GetCityMapControl("mapVisualization").getLayer('heartControl');
+			pointMapObj.set(mapData.populationSizeMapInfoHeartInfoDtos);
+		},
+		error: function (errorResult) {
+			$("#map").unOverlay();
+		}
+	})
+
+}
+//人口迁徙热力图(暂时没接口)
+function getHeartStru(requestObj) {
+	var data = JSON.stringify(requestObj);
+	$("#map").overlay();
+	$.request({
+		url: contextPath + '/dataanalysis/people/1/map/getPopulationSizeHeartMap',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			$("#map").unOverlay();
+			mapData = jsonData.data;
+			pointMapUid = jsonData.geoheyResponBodyData.dataUid;
+			pointMapObj = $("#populationEffect").GetCityMapControl("mapVisualization").getLayer('heartControl');
+			pointMapObj.set(mapData.populationSizeMapInfoHeartInfoDtos);
+		},
+		error: function (errorResult) {
+			$("#map").unOverlay();
+		}
+	})
+
+}
+
+/**
+ * 弹窗格式
+ * @param {Object} data
+ */
+function getinnerHtml(data) {
+	//处理null问题
+	var boardName = data.boardName;
+	var liveDensitys = data.liveDensitys;
+	var workDensitys = data.workDensitys;
+	var liveCount = data.liveCount;
+	var workCount = data.workCount;
+	var employmentRatio = data.employmentRatio;
+	var inhabitedPopulation;
+	var workingPopulation;
+	var unit;
+	//指标选择
+	var container2 = $('#dataIndex');
+	item = people.condition.conditionConfig2['0'];
+	if (item.selected == '0') {
+		inhabitedPopulation = liveDensitys;
+		workingPopulation = workDensitys;
+		unit = '人/km²';
+	};
+	if (item.selected == '1') {
+		inhabitedPopulation = liveCount;
+		workingPopulation = workCount;
+		unit = '万人';
+	};
+	if (item.selected == '2') {
+		inhabitedPopulation = liveCount;
+		workingPopulation = workCount;
+		unit = '万人';
+	}
+	if (inhabitedPopulation == null) {
+		inhabitedPopulation = '-';
+	};
+	if (workingPopulation == null) {
+		workingPopulation = '-';
+	};
+	if (employmentRatio == null) {
+		employmentRatio = '-';
+	};
+	var innerHtml =
+		`
+        <span class="btn-close" >×</span>
+        <div class="tb_tit clearfix">
+            <a href="javascript:;" class="fl col_white font12 mr05">` + boardName + `</a>
+            <span class="icon-tool-box fl ml05">
+               <em class="icon-eyes closed help-screwed"></em>
+            </span>
+        </div>
+         <div class="tb_cnt  nice-scroll tbh">
+            <div style="height:15px;">居住人口:` + inhabitedPopulation + unit + `</div>
+            </div>
+            <div class="tb_cnt nice-scroll tbh">
+            <div style="height:15px;">工作人口:` + workingPopulation + unit + `</div>
+            </div>
+             <div class="tb_cnt nice-scroll tbh">
+            <div style="height:15px;">职住比:` + employmentRatio + `</div>
+            </div>
+
+    `;
+	return innerHtml
+
+}
+
+//判断居住还是工作
+function getTypeArr(sizeObj) {
+	//if(obj.analysisType == 0) {
+	if (sizeObj.crowd == 1) { //居住
+		cityMapControlType = [{
+				"value": 'liveDensity',
+				"text": "人口密度",
+				isNumber: true
+			},
+			{
+				"value": 'livePeopleCount',
+				"text": "人口数量",
+				isNumber: true
+			}, {
+				"value": 'employmentRatio',
+				"text": "职住比",
+				isNumber: true
+			}
+		];
+
+	};
+
+	if (sizeObj.crowd == 2) { //工作
+		cityMapControlType = [{
+				"value": 'workDensity',
+				"text": "人口密度",
+				isNumber: true
+			},
+			{
+				"value": 'workPeopleCount',
+				"text": "人口数量",
+				isNumber: true
+			}, {
+				"value": 'employmentRatio',
+				"text": "职住比",
+				isNumber: true
+			}
+		];
+	}
+
+	//};
+
+	/*if(obj.analysisType == 1) {
+		cityMapControlType = [{
+			"value": 'indexValue',
+			"text": "关注人数",
+			isNumber: true
+		}];
+	}*/
+
+}
+
+//重新加载本页面
+function loadHtml() {
+	location.href = contextPath + "/dataanalysis/people/2/index";
+};
+
+function dimen(obj) {
+	var data = JSON.stringify(obj);
+	//加载数据前，添加loading
+	$("#map").overlay();
+	$.request({
+		url: contextPath + '/dataanalysis/people/2.0/map/getPopulationGridData',
+		type: 'post',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		data: data,
+		dataType: 'json',
+		success: function (jsonData) {
+			dimenHasData = true;
+			// var res = JSON.parse(jsonData.union_grid_population_data).data.features;
+			// var dataList = [];
+			// res.forEach(element => {
+			// 	var obj = {
+			// 		boardId: element.attrs.board_id,
+			// 		livePeopleCount: element.attrs.livepeoplecount,
+			// 		liveDensity: element.attrs.livedensity,
+			// 		workPeopleCount: element.attrs.workpeoplecount,
+			// 		workDensity: element.attrs.workdensity,
+			// 		employmentRatio: element.attrs.employmentratio
+			// 	}
+			// 	dataList.push(obj)
+			// });
+
+			// console.log(JSON.parse(jsonData.union_grid_population_data).data.features)
+			// console.log(dataList)
+
+			isFinish = true;
+			// if (dataList == []) { //处理成都的没数据问题
+			// 	gMap.removeDataViz();
+			// 	$("#map").unOverlay();
+			// 	return;
+			// }
+			// netMapData = {
+			// 	dataList: dataList
+			// };
+			if ($('.grid-box .btn-switch').hasClass('is-checked')) {
+				renderNet(jsonData.data_uid);
+			}
+			netMapUid = jsonData.data_uid;
+			if ($("#netSize").GetCityMapControl("mapVisualization")) {
+				netMapObj = $("#netSize").GetCityMapControl("mapVisualization").getLayer('netEffect');
+			}
+
+
+			//人口规模-数据选择
+			var parameter = {};
+			parameter = $.extend(true, {}, $('#peopleIndex').getParameter());
+			//封装地图参数指标对象
+			var typeObj = {};
+			//	typeObj.data = dataList;
+			typeObj.types = cityMapControlType;
+			var fieldName;
+			if (!netMapObj.callbackData) { //第一次初始化
+				fieldName = $("#app_target").val()
+			} else {
+				fieldName = netMapObj.callbackData.vizConfig.fieldName;
+				if (!['liveDensity', 'livePeopleCount', 'employmentRatio', 'workDensity', 'workPeopleCount'].includes(fieldName)) {
+					fieldName = $("#app_target").val()
+				}
+				if (parameter.peopleIndex == 2) { //处理切换保持指标选择正确
+					switch (fieldName) {
+						case 'liveDensity':
+							fieldName = "workDensity";
+							break
+						case 'livePeopleCount':
+							fieldName = "workPeopleCount";
+							break
+						case 'employmentRatio':
+							fieldName = "employmentRatio";
+							break
+					};
+				}
+				if (parameter.peopleIndex == 1) {
+					switch (fieldName) {
+						case 'workDensity':
+							fieldName = "liveDensity";
+							break
+						case 'workPeopleCount':
+							fieldName = "livePeopleCount";
+							break
+						case 'employmentRatio':
+							fieldName = "employmentRatio";
+							break
+					};
+				}
+			};
+			typeObj.fieldName = fieldName;
+			// if (netMapObj) {
+			// 	renderNet(netMapUid)
+			// }
+			//netMapObj.set(typeObj);
+			//加载完数据，去掉loading
+
+		},
+		error: function (errorResult) {
+			dimenHasData = false;
+			$("#map").unOverlay();
+		}
+	});
+};
+
+function renderNet(uid) {
+	$('#netSize').CityMapControl('mapVisualization', [{
+		id: 'netEffect',
+		type: 'polygon',
+		dataUid: uid,
+		tabs: ['polygon-grid'],
+		//isShow:false,
+		title: "网格渲染",
+		outline: { //轮廓
+			outlineWidth: 0.1,
+		},
+		//isCache:true,
+		//data:data,
+		// index: {
+		// 	types: [{
+		// 		value: "workdensity",
+		// 		text: "文字"
+		// 	}, {
+		// 		value: 'livepeoplecount',
+		// 		text: "id"
+		// 	}]
+		// 	//numberTypes:[{value: "boardTypeScore", text: "得分"}]
+		// },
+		index: { //地图切换指标配置
+			types: cityMapControlType.map(item => {
+				return {
+					value: item.value.toLowerCase(),
+					text: item.text
+				}
+			}),
+		},
+		listenShow: function (flag) { //点击事件的监听
+			//isChange = flag;
+			// if (netMapUid) {
+			// 	if (flag) {
+			// 		gMap.showDataViz(netMapUid);
+			// 		// if ($('#netName').next('i').hasClass('')) {
+
+			// 		// }
+			// 		$('#netName').next('i').toggleClass('icon-arrow-up').toggleClass('icon-arrow-down');
+			// 		$('#netMapLegend').show();
+			// 	} else {
+			// 		gMap.hideDataViz(netMapUid);
+			// 		$('#netName').next('i').toggleClass('icon-arrow-up').toggleClass('icon-arrow-down');
+			// 		$('#netMapLegend').hide();
+			// 	}
+			// }
+
+			if (flag) {
+				openNet();
+				if (!dimenHasData) {
+					sizeObj.dimensionType = dimenConfig[sizeObj.type];
+					sizeObj.dimensionIds = sizeObj.selectArea
+					console.log(sizeObj);
+					dimen(sizeObj);
+				}
+			} else {
+				closeNet()
+			}
+		},
+		listenLoading(status) {
+			if (status == 'loading') {
+				$("#map").overlay();
+			} else {
+				$("#map").unOverlay();
+			}
+		},
+		callback(callbackData, backObj, bool) {
+			/**
+			 * 1.修改样式
+			 */
+
+			$('#hideMapConfLi .nice-scroll').getNiceScroll().resize(); //隐藏配置地图的滚动条
+			/**
+			 * 2.获取参数
+			 */
+			fieldName = callbackData.vizConfig.fieldName; //指标
+			//人口规模-指标选择
+			var container2 = $('#dataIndex');
+			item = people.condition.conditionConfig2['0'];
+			var parameter = {};
+			parameter = $.extend(true, {}, $('#peopleIndex').getParameter());
+			/**
+			 * 3.处理参数--设置指标
+			 */
+			var polyIndex = 'liveDensity';
+			if (parameter.peopleIndex == 1) {
+				//container2.setData(item);
+				switch (fieldName) {
+					case 'liveDensity':
+					case 'livedensity':
+						item.selected = "0";
+						polyIndex = 'liveDensity'
+						break
+					case 'livePeopleCount':
+					case 'livepeoplecount':
+						item.selected = "1";
+						polyIndex = 'livePeopleCount'
+						break
+					case 'employmentRatio':
+					case 'employmentratio':
+						item.selected = "2";
+						polyIndex = 'employmentRatio'
+						break
+				};
+				//给插件赋值
+				container2.setData(item);
+			}
+			if (parameter.peopleIndex == 2) {
+				//container2.setData(item);
+				switch (fieldName) {
+					case 'workDensity':
+					case 'workdensity':
+						item.selected = "0";
+						polyIndex = 'workDensity'
+						break
+					case 'workPeopleCount':
+					case 'workpeoplecount':
+						item.selected = "1";
+						polyIndex = 'workPeopleCount'
+						break
+					case 'employmentRatio':
+					case 'employmentratio':
+						item.selected = "2";
+						polyIndex = 'employmentRatio'
+						break
+				};
+				container2.setData(item);
+			}
+			//设置面渲染
+			var selectIndex_1 = $("#populationSize").GetCityMapControl("mapVisualization").getLayer("polygonEffect");
+
+			if (mapData) {
+				selectIndex_1.set(mapData.dataList, polyIndex);
+			};
+
+			/**$("#map")
+			 * 3.2.2画图例准备
+			 */
+			var textName; //图例名称
+
+			$.each(cityMapControlType, function (index, value) {
+				if (value.value == fieldName || value.value.toLowerCase() == fieldName) { //成功回调，给图例添加单位
+					textName = value.text;
+				};
+			});
+			switch (textName) { //添加值到html页面,包括单位
+				case '人口密度':
+					textName = '人口密度(人/km²)';
+					netUnit = '人/km²';
+					break;
+				case '人口数量':
+					textName = '人口数量(万人)';
+					netUnit = '万人²';
+					break;
+				default:
+					break;
+			};
+			$('#netName').parent().show();
+			$('#netMapLegend').show();
+
+			$('#netName').html('网格-' + textName); //添加图例的名称到页面
+
+			/**
+			 * 3.2.3 地图构建相关参数配置
+			 */
+			/**
+			 * 3.2.3.1准备参数
+			 */
+			var callbackConf = callbackData.vizConfig;
+			$("#netMapLegend").html('');
+			if (callbackConf.type == 'polygon-choropleth' && callbackData.colorLegend) {
+				$("#legend-container").show();
+				/**
+				 * 3.2.3.2 处理返回的数据，将其画到图例上(包括处理图例的单位和图例的小数位)
+				 */
+				$.each(callbackData.colorLegend, function (k, v) {
+					if (callbackConf.fieldName == 'liveDensity' || callbackConf.fieldName == 'workDensity') { //判断如果人数是小数，则转化为整数
+						v.begin = Math.ceil(v.begin) < 0 ? 0 : Math.ceil(v.begin); //人数不能为小数，向上取整
+						v.end = Math.ceil(v.end);
+						v.range = (v.begin < 0 ? '<=' : v.begin + '-') + v.end;
+					} else { ///职住比 可以为小数，但是保留两位小数
+						v.begin = Math.round(v.begin * 100) / 100;
+						v.end = Math.round(v.end * 100) / 100;
+						v.range = (v.begin < 0 ? '<=' : v.begin + '-') + v.end;
+					}
+					$("#netMapLegend").append("<p class='font12'><i style='background-color:" + (v.begin < 0 ? "#CFCFCF" :
+						v.color) + "'></i>" + v.range + "</p>"); //画出图例
+				});
+			} else {
+				$("#legend-container").hide();
+			};
+			callbackConf.labelField = null; //显示版块名称，此处为推到极海的字段名称
+
+			if (callbackConf.fieldName) {
+				callbackConf.fieldName = callbackConf.fieldName.toLowerCase(); //显示版块名称，此处为推到极海的字段名称
+			}
+
+			/**
+			 * 3.2.3.3配置地图vizconfig
+			 */
+			var ids = sizeObj.selectArea.join("','");
+			//获取选择区域sizeObj.type +
+			var betArea = $('#districtAreaSelect').GetCityMapControl('districtAreaStd').val();
+			if (!betArea.isall) {
+				panelDataViz[1].filter = sizeObj.type + "_id in ('" + ids + "')"
+				//panelDataViz[1].filter = "street_id in ('" + ids + "')"
+				//panelDataViz[1].filter = "street_id in ('33892')"
+			} else {
+				panelDataViz[1].filter = ""
+			}
+			//配置=0的网格
+
+			if (callbackConf.buckets) {
+
+				callbackConf.buckets.forEach(item => {
+					if (item.value == 0) {
+						item.fillColor = "#CFCFCF"
+					};
+				});
+				if (callbackConf.buckets.some(item => {
+						item.value == 0
+					})) {
+					var fillObj = {
+						"fillColor": "#CFCFCF",
+						"value": 0,
+						"fillOpacity": 0.9
+					};
+					callbackConf.buckets.push(fillObj);
+				}
+			}
+			//callbackConf.outlineWidth = 0.1
+			panelDataViz[1].vizConfig = callbackConf;
+			// if (panelDataViz[1].dataUid || panelDataViz[1].dataUid == '') {
+			// 	gMap.removeDataViz(panelDataViz[1].dataUid);
+			// }
+			if (netMapUid) {
+				gMap.removeDataViz(netMapUid);
+				panelDataViz[1].dataUid = netMapUid;
+				$("#map").unOverlay(); //取消loading
+				gMap.getDataViz([panelDataViz[1]]);
+			}
+			$("#map").unOverlay();
+		}
+	}]);
+};
+/**
+ * 关闭网格相关
+ */
+function closeNet() {
+	if (!$('.grid-box .btn-switch').hasClass('is-disabled')) {
+		//滑块
+		$('.grid-box .btn-switch').removeClass('is-checked');
+		//图例
+		$('#netName').parent().hide();
+		$('#netMapLegend').hide();
+		//地图
+		if (netMapUid) {
+			gMap.hideDataViz(netMapUid);
+		}
+	}
+}
+/**
+ * 打开网格相关
+ */
+function openNet() {
+	if (!$('.grid-box .btn-switch').hasClass('is-disabled')) {
+		//滑块
+		$('.grid-box .btn-switch').addClass('is-checked');
+		//图例
+		$('#netName').parent().show();
+		$('#netMapLegend').show();
+		//地图
+		if (netMapUid) {
+			gMap.showDataViz(netMapUid);
+		}
+	}
+}
