@@ -1,29 +1,41 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
-const webpack = require('webpack')
-module.exports = {
-  entry: {
-    app: './src/index.js',
-    //print: './src/print.js'
-  },
-  devtool: 'inline-source-map',
-  devServer: {
-    contentBase: './dist',
-    hot: true
-  },
-  plugins: [
-    new CleanWebpackPlugin(['dist']),
-    new HtmlWebpackPlugin({
-      title: '管理输出'
-    }),
-    new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin()
-  ],
-  output: {
-    filename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'dist')
-  },
-  mode: "production"
+const path = require('path')
+const UglifyPlugin = require('uglifyjs-webpack-plugin')
 
-};
+module.exports = {
+    //入口
+    entry: './src/index.js',
+    //输出
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'bundle.js',
+    },
+
+    module: {
+        rules: [
+            //loader
+            {
+                test: /\.jsx?/,
+                include: [
+                    path.resolve(__dirname, 'src')
+                ],
+                use: 'babel-loader',
+            },
+        ],
+    },
+
+    // 代码模块路径解析的配置
+    resolve: {
+        modules: [
+            "node_modules",
+            path.resolve(__dirname, 'src')
+        ],
+
+        extensions: [".wasm", ".mjs", ".js", ".json", ".jsx"],
+    },
+
+    plugins: [
+        new UglifyPlugin(),
+        // 使用 uglifyjs-webpack-plugin 来压缩 JS 代码
+
+    ],
+}
