@@ -1,0 +1,21 @@
+// const presets = [
+//     [
+//         "@babel/env",
+//         {
+//             useBuiltIns: "usage",
+//         },
+//     ],
+// ];
+{
+    "presets": [
+        // [
+        //     "@babel/env",
+        //     {
+        //         useBuiltIns: "usage",
+        //     },
+        // ],
+        "@babel/preset-env",
+
+    ],
+    "plugins": []
+}
