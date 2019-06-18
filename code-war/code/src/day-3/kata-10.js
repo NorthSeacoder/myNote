@@ -1,6 +1,13 @@
-function removeSmallest(numbers) {
-    let _num = JSON.parse(JSON.stringify(numbers))
+// return masked string
+function maskify(cc) {
+    return cc.split('').map((item, i, arr) => {
+        if (i < (arr.length - 4)) {
+            return '#'
 
-    return _num
+
+
+        }
+        return item
+    }).join('')
 }
-console.log(removeSmallest([1, 2, 3, 4, 5]))
+console.log(maskify('4556364607935616'))
